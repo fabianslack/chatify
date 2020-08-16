@@ -1,0 +1,322 @@
+import 'dart:io';
+
+import 'package:chatapp/services/authentication.dart';
+import 'package:chatapp/themes/theme.dart';
+import 'package:chatapp/widgets/chat_image.dart';
+import 'package:chatapp/widgets/chat_message_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'share_page.dart';
+
+/// This class add the chatting funcionality to the app.
+/// When an object is created, a new unique ChatId is calculated.
+/// When a message is sent, the content, the timestamp and the Sender-ID are saved the database 
+/// under the path chats/ChatId/timestamp/
+class ChatPage extends StatefulWidget 
+{
+  final String _name;
+  final String id;
+  final AssetImage _image;
+
+  ChatPage(this._name, this._image, this.id);
+  @override
+  _ChatPageState createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> 
+{
+  double _width;
+  double _height;
+
+  bool _textContainsText = false;
+  String peerId;
+  String chatID;
+  File _imageFile;
+
+  bool _sharePressed = false;
+
+  TextEditingController _controller = TextEditingController();
+  ScrollController _scrollController = ScrollController();
+  ImagePicker _imagePicker;
+  double _inputTextLength = 0.05;
+
+
+  @override
+  void initState()
+  {
+    super.initState();
+    chatID = '';
+    peerId = widget.id;
+    _imagePicker = ImagePicker();
+    init();
+  }
+
+  void init() async
+  {
+    String id = Auth.getUserID();
+    if(peerId.hashCode >= id.hashCode)
+    {
+      chatID = '' + (peerId.hashCode - id.hashCode).toString();
+    }
+    else
+    {
+      chatID = '' + (id.hashCode - peerId.hashCode).toString();
+
+    }
+  }
+
+  void getImage() async
+  {
+    final pickedFile = await _imagePicker.getImage(source: ImageSource.gallery);
+    if(pickedFile.path != null)
+    {
+      _imageFile = File(pickedFile.path);
+    }
+
+    if(_imageFile != null)
+    {
+      uploadFile();
+    }
+  }
+
+  void uploadFile() async
+  {
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    StorageReference _ref = FirebaseStorage.instance.ref().child(fileName);
+    StorageUploadTask uploadTask = _ref.putFile(_imageFile);
+    StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
+    storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl)
+    {
+      onSendMessage(downloadUrl, 1);
+    });
+  }
+
+  void onSendMessage(String content, int type)
+  {
+    _scrollController.animateTo(0.0, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+      var docRef = Firestore.instance.collection("chats").
+      document(chatID).collection("messages").document(DateTime.now().millisecondsSinceEpoch.toString());
+
+      Firestore.instance.runTransaction((transaction) async
+      {
+        await transaction.set(docRef, 
+        {
+           'from' : Auth.getUserID(),
+           'content' : content,
+           'timestamp': DateTime.now().millisecondsSinceEpoch,
+           'type' : type
+        });
+      });
+    
+  }
+
+  Widget getAppBar()
+  {
+    return AppBar(
+      titleSpacing: 0,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      title: Text(
+        widget._name,
+        style: TextStyle(
+          fontSize: 24,
+          color: Colors.black
+        ),
+      ),
+      leading: IconButton(
+        icon: Icon(
+          Icons.navigate_before,
+          size: 40,
+          color: Colors.blueAccent,
+        ),
+        onPressed: () => Navigator.pop(context),
+      ),
+     
+      bottom: PreferredSize(
+        child: Container(
+          color: Colors.grey[200],
+          height: 1,
+        ),
+        preferredSize: Size.fromHeight(1.0),
+      )
+    );
+  }
+
+  Widget getBottomBody()
+  {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      width: _width,
+      height: _height*0.08,
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: Colors.grey[200],
+            width: 2
+          )
+        ),
+        color: Colors.white,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          Container(
+            decoration: ShapeDecoration(
+              color: Colors.grey[200],
+              shape: CircleBorder()
+            ),
+            child: IconButton(
+              iconSize: 25,
+              icon: Icon(
+                Icons.add,
+                color: Colors.grey[600],
+              ),
+              onPressed: () 
+              {
+                getImage();
+              },
+            ),
+          ), 
+          Container(
+            padding: const EdgeInsets.only(left: 10),
+            width:  _width*0.7,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: TextField(
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 18
+              ),
+              controller: _controller,
+              decoration: InputDecoration(
+                hintText: "Chat...",
+                hintStyle: TextStyle(
+                  color: Colors.grey[600]
+                ),
+                focusedBorder: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                suffixIcon: !_textContainsText ? IconButton(
+                  iconSize: 25,
+                  icon: Icon(
+                    Icons.mic,
+                    color: Colors.grey[600],
+                  ),
+                  onPressed: (){},
+                ) : null
+              ),
+              onChanged: (value)
+              {
+                setState(()
+                {
+                  value.length > 0 ? _textContainsText = true : _textContainsText = false;
+                });
+              },
+            ),
+          ), 
+          Container(
+            decoration: ShapeDecoration(
+              color: _textContainsText ? Colors.blueAccent : Colors.grey[200],
+              shape: CircleBorder()
+            ),
+            child: _textContainsText ? IconButton(
+              iconSize: 24,
+              icon: Icon(
+                Icons.send,
+                color: Colors.white,
+              ),
+              onPressed: () 
+              {
+                onSendMessage(_controller.text.trim(), 0);
+                _controller.clear();
+                setState(() {
+                  _textContainsText = false;
+                });
+              }
+            ) : 
+            IconButton(
+              onPressed: () {},
+              iconSize: 25,  
+              icon: Icon(Icons.gif),
+              color: Colors.grey[600],
+            ) 
+          )
+        ]
+      ),
+    );
+  }
+
+  Widget getChatColumn()
+  {
+    return Expanded(
+          child: StreamBuilder(
+          stream: Firestore.instance.collection("chats").
+          document(chatID).
+          collection("messages").
+          orderBy("timestamp", descending: true).
+          limit(20).
+          snapshots(),
+          builder: (context, snapshot) => snapshot.data != null ? ListView.builder(
+            controller: _scrollController,
+            reverse: true,
+            physics: BouncingScrollPhysics(),
+            itemCount: snapshot.data.documents.length,
+            itemBuilder: (context, index) 
+            {
+              return buildMessage(
+                snapshot.data.documents[index]["type"], 
+                snapshot.data.documents[index]["content"],
+                snapshot.data.documents[index]["timestamp"],
+                snapshot.data.documents[index]["from"],
+              ); 
+            }
+          ) : Container(),
+        
+      ),
+    );
+  }
+
+  Widget buildMessage(int type, String content, int timestamp, String from)
+  {
+   if(type == 0)
+    {
+     
+      return ChatMessage(content, from==Auth.getUserID(), timestamp);
+    }
+    else if (type == 1)
+    {
+      // image
+      return ChatImage(from==Auth.getUserID(), content, timestamp);
+    }
+    return Container();
+  }
+
+  Widget getBody()
+  {
+    return Column(
+      children: <Widget>[
+       getChatColumn(),
+       _sharePressed ? SharePage() : getBottomBody(),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) 
+  {
+    _width = MediaQuery.of(context).size.width;
+    _height = MediaQuery.of(context).size.height;
+    return Scaffold(
+      appBar: getAppBar(),
+      body: getBody(),
+      backgroundColor: Colors.white,
+    );
+  }
+}
