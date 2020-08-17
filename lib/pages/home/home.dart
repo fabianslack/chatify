@@ -2,7 +2,6 @@
 import 'package:chatapp/pages/home/search_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/chat_loader.dart';
-import 'package:chatapp/themes/theme.dart';
 import 'package:chatapp/widgets/chat_preview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -12,8 +11,6 @@ import 'chat.dart';
 
 class Home extends StatefulWidget 
 {
-  final Auth _auth;
-  Home(this._auth);
   @override
   _HomeState createState() => _HomeState();
 }
@@ -23,7 +20,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   TextEditingController _controller = TextEditingController();
   ChatLoader _chatLoader = ChatLoader();
   SharedPreferences _preferences;
-
+  Auth _auth;
 
   bool _searchPressed = false;
   bool _searching = false;
@@ -40,6 +37,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   void initState()
   {
     super.initState();
+    _auth = Auth();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds:100),
@@ -53,13 +51,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Future<void> loadChats() async
   {
-    //_chats =  await _chatLoader.getFriends();
     _preferences = await SharedPreferences.getInstance();
   }
 
   void handleLogOut() async
   {
-    await widget._auth.signOut();
+    await _auth.signOut();
     FocusScope.of(context).unfocus();
     Navigator.pushReplacementNamed(context, 'welcome-page');
   }
@@ -71,6 +68,16 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
       _searching = value.length > 0;
     });
                   
+  }
+
+  void handleTap(String username, String userid)
+  {
+     Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => ChatPage(
+          username,
+          AssetImage("assets/logo.png"),
+          userid),
+      ));
   }
 
   String getChatRoomId(String id)
@@ -150,24 +157,14 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget getBody()
   {
-    return Stack(
-      children: <Widget>[
-        Container(
-          padding: const EdgeInsets.only(top: 40),
-          width: _width,
-          height: _height,
-          decoration: BoxDecoration(
-            color: theme.backgroundColor,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(40),
-              topRight: Radius.circular(40)
-            )
-          ),
-          child: StreamBuilder(
+    return Padding(
+      padding: const EdgeInsets.only(top:20),
+      child: Stack(
+        children: <Widget>[
+          StreamBuilder(
             stream: _chatLoader.getStream(),
             builder: (context, snapshot) => snapshot.data != null ? ListView.separated(
               physics: BouncingScrollPhysics(),
-
               itemCount: snapshot.data["friends"].length,
               itemBuilder: (context, index) => GestureDetector(
                 child: StreamBuilder(
@@ -177,50 +174,45 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                     orderBy("timestamp", descending: true).
                     limit(1).
                     snapshots(),
-                builder: (context, chatsnapshot) =>  !chatsnapshot.hasError && chatsnapshot.hasData && chatsnapshot.data.documents.length > 0? 
+                builder: (context, chatsnapshot) =>  !chatsnapshot.hasError && chatsnapshot.hasData && chatsnapshot.data.documents.length > 0 ? 
                   ChatPreview(
                     snapshot.data["friends"][index], 
                     chatsnapshot.data.documents[0]["content"], 
                     chatsnapshot.data.documents[0]["timestamp"], 
-                    AssetImage("assets/logo.png")
+                    AssetImage("assets/logo.png"),
+                    !chatsnapshot.data.documents[0]["received"] && chatsnapshot.data.documents[0]["from"] != Auth.getUserID(),
                   ) 
                     : 
                   ChatPreview(
                     snapshot.data["friends"][index],
                     "",
                     0,
-                    AssetImage("assets/logo.png")
+                    AssetImage("assets/logo.png"),
+                    false
                   ),
                 ),
-                onTap: () 
-                {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => ChatPage(
-                      snapshot.data["friends"][index],
-                       AssetImage("assets/logo.png"),
-                      snapshot.data["friendsId"][index]),
-                  ));
-                }
+                onTap: () => handleTap(snapshot.data["friends"][index], snapshot.data["friendsId"][index])
               ),
-              separatorBuilder: (BuildContext context, int index) 
-              { 
+              separatorBuilder: (context, index)
+              {
                 return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                  child: Divider(
-                  color: Colors.grey[600],
-                  thickness: 1,
-                  )
+                  padding: const EdgeInsets.fromLTRB(65, 0, 10, 0),
+                  child: Container(
+                    height: 1,
+                    width: double.infinity,
+                    color: Colors.grey[200],
+                  ),
                 );
               },
             ) : Container(),
-          )
-        ),
-        getLogoutButton(),
-        SlideTransition(
-          position: _offset,
-          child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,
-        ),
-      ],
+          ),
+          //getLogoutButton(),
+          SlideTransition(
+            position: _offset,
+            child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,
+          ),
+        ],
+      ),
     );
   }
   
@@ -235,49 +227,47 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget appBar()
   {
-    return PreferredSize(
-      preferredSize: Size.fromHeight(_height*0.1),
-      child: AppBar(
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          "Messages",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 26,
-            fontWeight: FontWeight.bold
-          )
+    return AppBar(
+      elevation: 0,
+      backgroundColor: Colors.white,
+      centerTitle: true,
+      title: Text(
+        "Messages",
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 22,
+          fontWeight: FontWeight.w700
+        )
+      ),
+      leading: IconButton(
+        icon: Icon(
+          Icons.add,
+          color: Colors.grey,
+          size: 30
         ),
-        leading: IconButton(
+        onPressed: () 
+        {
+          
+        },
+      ),
+      actions: <Widget>[
+        IconButton(
           icon: Icon(
-            Icons.add,
-            color: Colors.white,
+            Icons.search,
+            color: Colors.grey,
             size: 30
           ),
           onPressed: () 
           {
-            
+            setState(() {
+              _searchPressed = true;
+              _searching = false;
+              _firstClick = true;
+              _animationController.forward();
+            });
           },
-        ),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(
-              Icons.search,
-              color: Colors.white,
-              size: 30
-            ),
-            onPressed: () 
-            {
-              setState(() {
-                _searchPressed = true;
-                _searching = false;
-                _firstClick = true;
-                _animationController.forward();
-              });
-            },
-          )
-        ],
-      ),
+        )
+      ],
     );
   }
   
@@ -290,7 +280,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     loadChats();
     return Scaffold(
       appBar: !_searchPressed ? appBar() : getSearchBar(),
-      body: getBody()
+      body: getBody(),
+      backgroundColor: Colors.white,
     );
   }
 }

@@ -1,10 +1,8 @@
-import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/themes/theme.dart';
 import 'package:flutter/material.dart';
-
-import '../home/home.dart';
-import '../profile_page.dart';
-import '../story_page.dart';
+import 'home/home.dart';
+import 'profile_page.dart';
+import 'story_page.dart';
 
 class RootPage extends StatefulWidget
 {
@@ -14,16 +12,26 @@ class RootPage extends StatefulWidget
 
 class _RootPageState extends State<RootPage> 
 {
-  //List<StatusBarItem> stories = List();
   final PageController _controller = PageController();
-  //bool accessGranted;
   int _selectedIndex = 0;
-  final List<Widget> _bodies = [
-    Home(new Auth()),
-    //SearchPage(),
-    StoryPage(),
-    ProfilePage()
-  ];
+  Home _home;
+  ProfilePage _profilePage;
+  StoryPage _storyPage;
+  List<Widget> _bodies;
+
+  @override
+  void initState()
+  {
+    _home = Home();
+    _profilePage = ProfilePage();
+    _storyPage = StoryPage();
+    _bodies = [
+      _home, 
+      _profilePage,
+      _storyPage
+    ];
+
+  }
 
   Widget getBottomNavigationBar()
   {
