@@ -89,7 +89,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   Widget getSearchBar()
   {
     return PreferredSize(
-      preferredSize: Size.fromHeight(_height*0.1),
+      preferredSize: Size.fromHeight(100),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(10, 35, 10, 30),
         child: Row(
@@ -177,11 +177,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                     orderBy("timestamp", descending: true).
                     limit(1).
                     snapshots(),
-                builder: (context, chatsnapshot) =>  !chatsnapshot.hasError && chatsnapshot.hasData && chatsnapshot.data.documents.length > 0? ChatPreview(
-                  snapshot.data["friends"][index], 
-                  chatsnapshot.data.documents[0]["content"], 
-                  chatsnapshot.data.documents[0]["timestamp"], 
-                  AssetImage("assets/logo.png")) : ChatPreview(
+                builder: (context, chatsnapshot) =>  !chatsnapshot.hasError && chatsnapshot.hasData && chatsnapshot.data.documents.length > 0? 
+                  ChatPreview(
+                    snapshot.data["friends"][index], 
+                    chatsnapshot.data.documents[0]["content"], 
+                    chatsnapshot.data.documents[0]["timestamp"], 
+                    AssetImage("assets/logo.png")
+                  ) 
+                    : 
+                  ChatPreview(
                     snapshot.data["friends"][index],
                     "",
                     0,

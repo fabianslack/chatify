@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:chatapp/services/authentication.dart';
-import 'package:chatapp/themes/theme.dart';
 import 'package:chatapp/widgets/chat_image.dart';
 import 'package:chatapp/widgets/chat_message_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -40,7 +39,6 @@ class _ChatPageState extends State<ChatPage>
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
   ImagePicker _imagePicker;
-  double _inputTextLength = 0.05;
 
 
   @override
@@ -95,22 +93,26 @@ class _ChatPageState extends State<ChatPage>
 
   void onSendMessage(String content, int type)
   {
-    _scrollController.animateTo(0.0, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
-      var docRef = Firestore.instance.collection("chats").
-      document(chatID).collection("messages").document(DateTime.now().millisecondsSinceEpoch.toString());
 
-      Firestore.instance.runTransaction((transaction) async
+    _scrollController.animateTo(0.0, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+    int time = DateTime.now().millisecondsSinceEpoch;
+    var docRef = Firestore.instance.collection("chats").
+    document(chatID).collection("messages").document(time.toString());
+
+    Firestore.instance.runTransaction((transaction) async
+    {
+      await transaction.set(docRef, 
       {
-        await transaction.set(docRef, 
-        {
-           'from' : Auth.getUserID(),
-           'content' : content,
-           'timestamp': DateTime.now().millisecondsSinceEpoch,
-           'type' : type
-        });
+          'from' : Auth.getUserID(),
+          'content' : content,
+          'timestamp': time,
+          'type' : type,
+          'received' : false
       });
+    });
     
   }
+  
 
   Widget getAppBar()
   {
@@ -149,7 +151,7 @@ class _ChatPageState extends State<ChatPage>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 5),
       width: _width,
-      height: _height*0.08,
+      height: 50,
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -187,11 +189,11 @@ class _ChatPageState extends State<ChatPage>
               borderRadius: BorderRadius.circular(30),
             ),
             child: TextField(
-              keyboardType: TextInputType.multiline,
-              maxLines: null,
+              //keyboardType: TextInputType.multiline,
+              //maxLines: null,
               style: TextStyle(
                 color: Colors.black,
-                fontSize: 18
+                fontSize: 16
               ),
               controller: _controller,
               decoration: InputDecoration(
@@ -270,11 +272,13 @@ class _ChatPageState extends State<ChatPage>
             itemCount: snapshot.data.documents.length,
             itemBuilder: (context, index) 
             {
+              var ref = snapshot.data.documents[index];
               return buildMessage(
-                snapshot.data.documents[index]["type"], 
-                snapshot.data.documents[index]["content"],
-                snapshot.data.documents[index]["timestamp"],
-                snapshot.data.documents[index]["from"],
+                ref["type"], 
+                ref["content"],
+                ref["timestamp"],
+                ref["from"],
+                ref["received"]
               ); 
             }
           ) : Container(),
@@ -283,12 +287,20 @@ class _ChatPageState extends State<ChatPage>
     );
   }
 
-  Widget buildMessage(int type, String content, int timestamp, String from)
+  Widget buildMessage(int type, String content, int timestamp, String from, bool received)
   {
+    if(from != Auth.getUserID())
+    {
+Firestore.instance.collection("chats").document(chatID).collection("messages").document(timestamp.toString()).updateData(
+      {
+        'received' : true
+      }
+    );
+    }
    if(type == 0)
     {
      
-      return ChatMessage(content, from==Auth.getUserID(), timestamp);
+      return ChatMessage(content, from==Auth.getUserID(), timestamp, received);
     }
     else if (type == 1)
     {

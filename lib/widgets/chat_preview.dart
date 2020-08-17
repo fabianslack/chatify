@@ -13,9 +13,10 @@ class ChatPreview extends StatelessWidget
   @override
   Widget build(BuildContext context) 
   {
+    DateTime time = DateTime.fromMillisecondsSinceEpoch(_timestamp);
     return Container(
       width: double.infinity,
-      height: MediaQuery.of(context).size.height * 0.08,
+      height: 50,
       padding: const EdgeInsets.symmetric(
         horizontal: 20
       ),
@@ -37,16 +38,16 @@ class ChatPreview extends StatelessWidget
                   children: <Widget>[
                     Text(
                       _username,
+                      overflow: TextOverflow.clip,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 24
+                        fontSize: 20
                       )
                     ),
                     Row(
                       children: <Widget>[
                         Text(
-                          DateTime.fromMillisecondsSinceEpoch(_timestamp).toString(),
-                        
+                          time.hour.toString() + ":" + (time.minute.toString().length > 1 ? time.minute.toString() : "0" + time.minute.toString()),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16
@@ -64,11 +65,13 @@ class ChatPreview extends StatelessWidget
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text(
-                      _lastMessage,
-                      style: TextStyle(
-                        fontSize: 16
-                      )
+                    Flexible(
+                      child: Text(
+                        _lastMessage,
+                        style: TextStyle(
+                          fontSize: 16
+                        )
+                      ),
                     ),
                     Icon(
                       Icons.pin_drop,

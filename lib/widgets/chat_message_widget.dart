@@ -5,8 +5,9 @@ class ChatMessage extends StatelessWidget
   final String _message;
   final bool _left;
   final int _timestamp;
+  final bool _received;
 
-  ChatMessage(this._message,this._left, this._timestamp);
+  ChatMessage(this._message,this._left, this._timestamp, this._received);
 
   @override
   Widget build(BuildContext context) 
@@ -47,13 +48,26 @@ class ChatMessage extends StatelessWidget
                 ),
                 Align(
                   alignment: Alignment.bottomRight,
-                  child: Text(
-                    time.hour.toString() + ":" + time.minute.toString(),
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12
+                  child: Container(
+                    width: 50,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          time.hour.toString() + ":" + (time.minute.toString().length > 1 ? time.minute.toString() : "0" + time.minute.toString()),
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12
+                          ),
+                        ),
+                        _left ? Icon(
+                          _received ? Icons.done_all : Icons.done,
+                          size: 18,
+                          color: Colors.grey,
+                        ) : Container()
+                      ],
                     ),
-                  ),
+                  )
                 )
               ],
             )
