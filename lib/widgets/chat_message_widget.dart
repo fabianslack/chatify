@@ -1,7 +1,8 @@
 import 'package:chatapp/services/authentication.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class ChatMessage extends StatelessWidget 
+class ChatMessage extends StatefulWidget 
 {
   bool _liked;
   bool _left;
@@ -17,29 +18,36 @@ class ChatMessage extends StatelessWidget
   }
 
   @override
+  _ChatMessageState createState() => _ChatMessageState();
+}
+
+class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
+{
+  @override
   Widget build(BuildContext context) 
   {
-    DateTime time = DateTime.fromMillisecondsSinceEpoch(_ref["timestamp"]);
+    DateTime time = DateTime.fromMillisecondsSinceEpoch(widget._ref["timestamp"]);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical:5),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: widget._left ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: !_left ? MainAxisAlignment.start : MainAxisAlignment.end,
+            mainAxisAlignment: !widget._left ? MainAxisAlignment.start : MainAxisAlignment.end,
             children: [
               GestureDetector(
                 onDoubleTap: () 
                 {
-                  _liked = !_liked;
-                  _onDoubleClick(_ref["timestamp"], _liked);
+                  widget._liked = !widget._liked;
+                  widget._onDoubleClick(widget._ref["timestamp"], widget._liked);
+                  HapticFeedback.vibrate();
                 },
                 child: Container(
                   width: MediaQuery.of(context).size.width*0.6,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    borderRadius: !_left ? 
+                    borderRadius: !widget._left ? 
                       BorderRadius.only(
                         bottomRight: Radius.circular(20),
                         topLeft: Radius.circular(20),
@@ -48,14 +56,14 @@ class ChatMessage extends StatelessWidget
                         bottomLeft: Radius.circular(20),
                         topRight: Radius.circular(20),
                         topLeft: Radius.circular(20)),
-                      color: _left ? Colors.grey[200] : Colors.grey[400],
+                      color: widget._left ? Colors.grey[200] : Colors.grey[400],
                     ),
                   child: Column(
                     children: [
                       Align(
                         alignment: Alignment.topLeft,
                         child: Text(
-                          _ref["content"], 
+                          widget._ref["content"], 
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 18
@@ -77,8 +85,8 @@ class ChatMessage extends StatelessWidget
                                   fontSize: 12
                                 ),
                               ),
-                              _left ? Icon(
-                                _ref["received"] ? Icons.done_all : Icons.done,
+                              widget._left ? Icon(
+                                widget._ref["received"] ? Icons.done_all : Icons.done,
                                 size: 18,
                                 color: Colors.grey,
                               ) : Container()
@@ -92,14 +100,18 @@ class ChatMessage extends StatelessWidget
               )
             ],
           ),
-          _liked ? Padding(
-            padding: const EdgeInsets.only(top:2),
-            child: Icon(
-              Icons.favorite, 
-              color: Colors.red,
-              size: 20,),
-          ) : 
-          Container()
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal:2, vertical: 2),
+            child: AnimatedSize(
+              duration: Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+              vsync: this,
+              child: Icon(
+                Icons.favorite, 
+                color: Colors.red,
+                size: widget._liked ? 20 : 0,),
+            ),
+          ) 
         ],
       )
     );

@@ -9,7 +9,6 @@ class MessageService {
 
   Stream getStream()
   {
-    print(_chatID);
     return Firestore.instance.collection("chats").
       document(_chatID).
       collection("messages").
