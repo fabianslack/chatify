@@ -119,7 +119,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                   fontSize: 20
                 ),
                 decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.only(bottom: 10),
+                  
                   prefixIcon: Icon(
                     Icons.search,
                     color: Colors.grey[900],
