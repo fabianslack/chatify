@@ -1,39 +1,76 @@
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
+import 'package:chatapp/services/authentication.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MessageService {
-  var _firebaseRef = FirebaseDatabase().reference().child('chats');
+  
+  String _chatID;
 
-  void sendMessage(String message) {
-    _firebaseRef.push().set({
-      'message': message,
-      'timestamp': DateTime.now().millisecondsSinceEpoch
+  MessageService(this._chatID);
+
+  Stream getStream()
+  {
+    print(_chatID);
+    return Firestore.instance.collection("chats").
+      document(_chatID).
+      collection("messages").
+      orderBy("timestamp", descending: true).
+      limit(20).
+      snapshots();
+  }
+
+  void setRead(int timestamp)
+  {
+    Firestore.
+    instance.
+    collection("chats").
+    document(_chatID).
+    collection("messages").
+    document(timestamp.toString()).
+    updateData(
+      {
+        'received' :true
+      }
+    );
+  }
+
+  void sendMessage(String content, int type)
+  {
+    int time = DateTime.now().millisecondsSinceEpoch;
+    var docRef = Firestore.
+      instance.
+      collection("chats").
+      document(_chatID).
+      collection("messages").
+      document(time.toString());
+
+    Firestore.instance.runTransaction((transaction) async 
+    {
+      await transaction.set(docRef, 
+      {
+        'from' : Auth.getUserID(),
+        'content' : content,
+        'timestamp' : time,
+        'type' : type,
+        'received' : false,
+        'liked' : false
+      });
     });
   }
 
-  StreamBuilder getStream() {
-    return StreamBuilder(
-        stream: _firebaseRef.onValue,
-        builder: (context, snapshot) {
-          if (snapshot.hasData &&
-              !snapshot.hasError &&
-              snapshot.data.snapshot.data != null) {
-            Map data = snapshot.data.snapshot.value;
-            List item = [];
-
-            data.forEach((key, value) {
-              item.add({"key": key, ...data});
-            });
-
-            return ListView.builder(
-              itemCount: item.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                    title: Text(item[index]['message']),
-                    trailing: Text(item[index]['timestamp']));
-              },
-            );
-          }
-        });
+  void likeMessage(int timestamp, bool liked)
+  {
+    Firestore.
+    instance.
+    collection("chats").
+    document(_chatID).
+    collection("messages").
+    document(timestamp.toString()).
+    updateData(
+      {
+        'liked' : liked
+      }
+    );
   }
+
+
 }
