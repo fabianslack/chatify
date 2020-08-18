@@ -16,7 +16,7 @@ class _RootPageState extends State<RootPage>
   int _selectedIndex = 0;
   Home _home;
   ProfilePage _profilePage;
-  StoryPage _storyPage;
+  ProfileSettingsPage _storyPage;
   List<Widget> _bodies;
 
   @override
@@ -24,7 +24,7 @@ class _RootPageState extends State<RootPage>
   {
     _home = Home();
     _profilePage = ProfilePage();
-    _storyPage = StoryPage();
+    _storyPage = ProfileSettingsPage();
     _bodies = [
       _home, 
       _profilePage,
@@ -48,7 +48,7 @@ class _RootPageState extends State<RootPage>
       showUnselectedLabels: false,
       selectedItemColor: Colors.white,
       unselectedItemColor: Colors.grey,
-      items: [Icons.chat, Icons.search, Icons.share, Icons.supervised_user_circle]
+      items: [Icons.chat, Icons.share, Icons.supervised_user_circle]
           .asMap()
           .map((key, value) => MapEntry(
           key, BottomNavigationBarItem(

@@ -1,13 +1,13 @@
 
 import 'package:flutter/material.dart';
 
-class StoryPage extends StatefulWidget 
+class ProfileSettingsPage extends StatefulWidget 
 {
   @override
-  _StoryPageState createState() => _StoryPageState();
+  _ProfileSettingsPageState createState() => _ProfileSettingsPageState();
 }
 
-class _StoryPageState extends State<StoryPage> 
+class _ProfileSettingsPageState extends State<ProfileSettingsPage> 
 {
   @override
   Widget build(BuildContext context) 
