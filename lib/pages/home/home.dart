@@ -95,19 +95,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget getSearchBar()
   {
+    
     return PreferredSize(
       preferredSize: Size.fromHeight(100),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 35, 10, 30),
+        padding: const EdgeInsets.fromLTRB(10, 35, 10, 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [ 
             Container(
               width: _width*0.8,
-              height: _height * 0.05,
+              height: 32,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                color: Colors.white
+                color: Colors.grey[200]
               ),
               child: TextField(
                 autofocus: true,
@@ -118,9 +119,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                   fontSize: 20
                 ),
                 decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.only(bottom: 10),
                   prefixIcon: Icon(
                     Icons.search,
-                    color: Colors.grey[900],),
+                    color: Colors.grey[900],
+                    size:30),
                   focusedBorder: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   errorBorder: InputBorder.none,
@@ -132,8 +135,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
               child: Text(
                 "Close",
                 style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.white,
+                  fontSize: 18,
+                  color: Colors.black,
                   fontWeight: FontWeight.bold
                 )
               ),

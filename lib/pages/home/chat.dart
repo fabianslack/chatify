@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:chatapp/services/authentication.dart';
+import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/chat_image.dart';
 import 'package:chatapp/widgets/chat_message_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,6 +30,8 @@ class _ChatPageState extends State<ChatPage>
   double _width;
   double _height;
 
+  MessageService _service;
+
   bool _textContainsText = false;
   String peerId;
   String chatID;
@@ -47,11 +50,12 @@ class _ChatPageState extends State<ChatPage>
     super.initState();
     chatID = '';
     peerId = widget.id;
-    _imagePicker = ImagePicker();
     init();
+    _service = MessageService(chatID);
+    _imagePicker = ImagePicker();
   }
 
-  void init() async
+  void init() 
   {
     String id = Auth.getUserID();
     if(peerId.hashCode >= id.hashCode)
@@ -87,30 +91,24 @@ class _ChatPageState extends State<ChatPage>
     StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
     storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl)
     {
-      onSendMessage(downloadUrl, 1);
+      _service.sendMessage(downloadUrl, 1);
     });
   }
 
-  void onSendMessage(String content, int type)
+  void onSendClicked()
   {
-
+    _service.sendMessage(_controller.text.trim(), 0);
     _scrollController.animateTo(0.0, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
-    int time = DateTime.now().millisecondsSinceEpoch;
-    var docRef = Firestore.instance.collection("chats").
-    document(chatID).collection("messages").document(time.toString());
 
-    Firestore.instance.runTransaction((transaction) async
-    {
-      await transaction.set(docRef, 
-      {
-          'from' : Auth.getUserID(),
-          'content' : content,
-          'timestamp': time,
-          'type' : type,
-          'received' : false
-      });
+    _controller.clear();
+    setState(() {
+      _textContainsText = false;
     });
-    
+  }
+
+  void onMessageDoubleTap(int timestamp, bool liked)
+  {
+    _service.likeMessage(timestamp, liked);
   }
   
 
@@ -234,14 +232,7 @@ class _ChatPageState extends State<ChatPage>
                 Icons.send,
                 color: Colors.white,
               ),
-              onPressed: () 
-              {
-                onSendMessage(_controller.text.trim(), 0);
-                _controller.clear();
-                setState(() {
-                  _textContainsText = false;
-                });
-              }
+              onPressed: onSendClicked,
             ) : 
             IconButton(
               onPressed: () {},
@@ -259,12 +250,7 @@ class _ChatPageState extends State<ChatPage>
   {
     return Expanded(
           child: StreamBuilder(
-          stream: Firestore.instance.collection("chats").
-          document(chatID).
-          collection("messages").
-          orderBy("timestamp", descending: true).
-          limit(20).
-          snapshots(),
+          stream: _service.getStream(),
           builder: (context, snapshot) => snapshot.data != null ? ListView.builder(
             controller: _scrollController,
             reverse: true,
@@ -273,13 +259,19 @@ class _ChatPageState extends State<ChatPage>
             itemBuilder: (context, index) 
             {
               var ref = snapshot.data.documents[index];
-              return buildMessage(
-                ref["type"], 
-                ref["content"],
-                ref["timestamp"],
-                ref["from"],
-                ref["received"]
-              ); 
+              if(ref['from'] != Auth.getUserID())
+              {
+                _service.setRead(ref['timestamp']);
+              }
+              if(ref['type'] == 0)
+              {
+                return ChatMessage(ref, onMessageDoubleTap);
+              }
+              else if(ref['type'] == 1)
+              {
+                return ChatImage(ref);
+              }
+              return Container();
             }
           ) : Container(),
         
@@ -287,28 +279,6 @@ class _ChatPageState extends State<ChatPage>
     );
   }
 
-  Widget buildMessage(int type, String content, int timestamp, String from, bool received)
-  {
-    if(from != Auth.getUserID())
-    {
-Firestore.instance.collection("chats").document(chatID).collection("messages").document(timestamp.toString()).updateData(
-      {
-        'received' : true
-      }
-    );
-    }
-   if(type == 0)
-    {
-     
-      return ChatMessage(content, from==Auth.getUserID(), timestamp, received);
-    }
-    else if (type == 1)
-    {
-      // image
-      return ChatImage(from==Auth.getUserID(), content, timestamp);
-    }
-    return Container();
-  }
 
   Widget getBody()
   {
