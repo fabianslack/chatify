@@ -1,7 +1,10 @@
 import 'dart:io';
 
+import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/db_handler.dart';
 import 'package:chatapp/services/storage_handler.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -206,7 +209,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         children: [
           Text("E-Mail: "),
           FutureBuilder(
-            //future: Auth().getUserEmail(),
+            future: Firestore.instance.collection("users").document(Auth.getUserID()).get().then((value) => value.data["e-mail"]),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 return Text(snapshot.data);

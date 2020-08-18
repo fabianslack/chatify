@@ -177,14 +177,29 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                     orderBy("timestamp", descending: true).
                     limit(1).
                     snapshots(),
-                builder: (context, chatsnapshot) =>  !chatsnapshot.hasError && chatsnapshot.hasData && chatsnapshot.data.documents.length > 0 ? 
-                  ChatPreview(
+                builder: (context, chatsnapshot) {
+                return !chatsnapshot.hasError && chatsnapshot.hasData && chatsnapshot.data.documents.length > 0 ? 
+                FutureBuilder(
+                  future: Firestore.instance.collection('users').document(snapshot.data['friends'][index]).get().then((value) => value.data['profileImage']),
+                  builder: (context, imageSnapshot) {
+                    return imageSnapshot.hasData && !imageSnapshot.hasError ?
+                    ChatPreview(
                     snapshot.data["friends"][index], 
                     chatsnapshot.data.documents[0]["content"], 
                     chatsnapshot.data.documents[0]["timestamp"], 
                     AssetImage("assets/logo.png"),
                     !chatsnapshot.data.documents[0]["received"] && chatsnapshot.data.documents[0]["from"] != Auth.getUserID(),
-                  ) 
+                    imageRef: imageSnapshot.data,
+                  ) : ChatPreview(
+                    snapshot.data["friends"][index],
+                    "",
+                    0,
+                    AssetImage("assets/logo.png"),
+                    false
+                  );
+                  },
+                )
+                  
                     : 
                   ChatPreview(
                     snapshot.data["friends"][index],
@@ -192,7 +207,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                     0,
                     AssetImage("assets/logo.png"),
                     false
-                  ),
+                  );
+                  }
                 ),
                 onTap: () => handleTap(snapshot.data["friends"][index], snapshot.data["friendsId"][index])
               ),
