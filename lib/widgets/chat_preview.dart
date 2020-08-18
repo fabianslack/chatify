@@ -8,8 +8,9 @@ class ChatPreview extends StatelessWidget
   int _timestamp;
   AssetImage _image;
   bool _read;
+  bool _online;
 
-  ChatPreview(this._username, this._lastMessage, this._timestamp, this._image, this._read);
+  ChatPreview(this._username, this._lastMessage, this._timestamp, this._image, this._read, this._online);
 
   @override
   Widget build(BuildContext context) 
@@ -24,9 +25,23 @@ class ChatPreview extends StatelessWidget
       ),
       child: Row(
         children: <Widget>[
-          CircleAvatar(
-            backgroundImage: _image,
-            radius: 24,
+          Container(
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  backgroundImage: _image,
+                  radius: 24,
+                ),
+                Container(
+                  height: 5,
+                  width: 5,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _online ?  Colors.green : Colors.red
+                  ),
+                )
+              ],
+            )
           ),
           SizedBox(
             width: 10,

@@ -91,7 +91,8 @@ class Auth
           'friends' : [],
           'friendsId' : [],
           'stories': {},
-          'requests' : []
+          'requests' : [],
+          'online' : false
         });
         userID = user.uid;
       }
@@ -118,6 +119,15 @@ class Auth
     return null;
   }
 
+  void setOnlineStatus(bool online)
+  {
+    Firestore.instance.collection("users").document(userID).setData(
+      {
+        'online' : online
+      }
+    );
+  }
+
   Future<void> signOut() async
   {
     await _auth.signOut();
@@ -137,10 +147,5 @@ class Auth
   Future<FirebaseUser> getCurrentUser() async 
   {
     return await _auth.currentUser();
-  }
-
-  Future<DocumentSnapshot>  _getsnapshot(var user) async
-  {
-    return Firestore.instance.collection("users").document(user.uid).get();
   }
 }

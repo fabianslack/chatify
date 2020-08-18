@@ -1,3 +1,4 @@
+import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/themes/theme.dart';
 import 'package:flutter/material.dart';
 import 'home/home.dart';
@@ -10,7 +11,7 @@ class RootPage extends StatefulWidget
   _RootPageState createState() => _RootPageState();
 }
 
-class _RootPageState extends State<RootPage> 
+class _RootPageState extends State<RootPage> with WidgetsBindingObserver
 {
   final PageController _controller = PageController();
   int _selectedIndex = 0;
@@ -18,10 +19,14 @@ class _RootPageState extends State<RootPage>
   ProfilePage _profilePage;
   StoryPage _storyPage;
   List<Widget> _bodies;
+  Auth _auth;
 
   @override
   void initState()
   {
+    super.initState();
+    _auth = new Auth();
+    WidgetsBinding.instance.addObserver(this);
     _home = Home();
     _profilePage = ProfilePage();
     _storyPage = StoryPage();
@@ -31,6 +36,46 @@ class _RootPageState extends State<RootPage>
       _storyPage
     ];
 
+  }
+
+  @override
+  void dispose()
+  {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch(state)
+    {
+      case AppLifecycleState.resumed:
+      {
+        _auth.setOnlineStatus(true);
+        break;
+      }
+      case AppLifecycleState.detached:
+      {
+        break;      
+      }
+      case AppLifecycleState.inactive:
+      {
+        Future.delayed(Duration(minutes: 1), ()
+        {
+          _auth.setOnlineStatus(false);
+        });
+
+        break;
+      }
+      case AppLifecycleState.paused:
+      {
+        Future.delayed(Duration(minutes: 1), ()
+        {
+          _auth.setOnlineStatus(false);
+        });
+        break;
+      }
+    }
   }
 
   Widget getBottomNavigationBar()
