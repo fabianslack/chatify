@@ -177,29 +177,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                     orderBy("timestamp", descending: true).
                     limit(1).
                     snapshots(),
-                builder: (context, chatsnapshot) {
-                return !chatsnapshot.hasError && chatsnapshot.hasData && chatsnapshot.data.documents.length > 0 ? 
-                FutureBuilder(
-                  future: Firestore.instance.collection('users').document(snapshot.data['friends'][index]).get().then((value) => value.data['profileImage']),
-                  builder: (context, imageSnapshot) {
-                    return imageSnapshot.hasData && !imageSnapshot.hasError ?
-                    ChatPreview(
+                builder: (context, chatsnapshot) =>  !chatsnapshot.hasError && chatsnapshot.hasData && chatsnapshot.data.documents.length > 0 ? 
+                  FutureBuilder(
+                    future: Firestore.instance.collection('users').document(snapshot.data['friendsId'][index]).get().then((value) => value.data['profileImage']),
+                    builder: (context, imgsnap) {
+                      return !imgsnap.hasError && imgsnap.hasData? 
+                      ChatPreview(
                     snapshot.data["friends"][index], 
                     chatsnapshot.data.documents[0]["content"], 
                     chatsnapshot.data.documents[0]["timestamp"], 
                     AssetImage("assets/logo.png"),
                     !chatsnapshot.data.documents[0]["received"] && chatsnapshot.data.documents[0]["from"] != Auth.getUserID(),
-                    imageRef: imageSnapshot.data,
-                  ) : ChatPreview(
-                    snapshot.data["friends"][index],
-                    "",
-                    0,
-                    AssetImage("assets/logo.png"),
-                    false
-                  );
-                  },
-                )
-                  
+                    imageRef: imgsnap.data,
+                  ) 
                     : 
                   ChatPreview(
                     snapshot.data["friends"][index],
@@ -208,7 +198,36 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                     AssetImage("assets/logo.png"),
                     false
                   );
-                  }
+                    }
+                  )
+                  :
+                  FutureBuilder(
+                    future: Firestore.instance.collection('users').document(snapshot.data['friendsId'][index]).get().then((value) => value.data['profileImage']),
+                    builder: (context, imgsnap) {
+                      return !imgsnap.hasError && imgsnap.hasData? 
+                      
+                  ChatPreview(
+                    snapshot.data["friends"][index],
+                    "",
+                    0,
+                    AssetImage("assets/logo.png"),
+                    false,
+                    imageRef: imgsnap.data,
+                  )
+                  :
+                  ChatPreview(
+                    snapshot.data["friends"][index],
+                    "",
+                    0,
+                    AssetImage("assets/logo.png"),
+                    false,
+                  );
+                    }
+                    
+                
+                    
+                  )
+                  
                 ),
                 onTap: () => handleTap(snapshot.data["friends"][index], snapshot.data["friendsId"][index])
               ),

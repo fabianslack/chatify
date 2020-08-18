@@ -9,7 +9,8 @@ class ChatPreview extends StatelessWidget {
   String imageRef;
 
   ChatPreview(this._username, this._lastMessage, this._timestamp, this._image,
-      this._read, {this.imageRef});
+      this._read,
+      {this.imageRef});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +23,8 @@ class ChatPreview extends StatelessWidget {
         child: Row(
           children: <Widget>[
             CircleAvatar(
-              backgroundImage: imageRef == null ?_image : NetworkImage(imageRef),
+              backgroundImage:
+                  imageRef == null ? _image : NetworkImage(imageRef),
               radius: 24,
             ),
             SizedBox(
