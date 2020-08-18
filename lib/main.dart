@@ -1,11 +1,10 @@
-import 'package:chatapp/pages/profile/Root_page.dart';
+import 'package:chatapp/pages/Root_page.dart';
 import 'package:chatapp/pages/profile_page.dart';
 import 'package:chatapp/pages/splash_screen.dart';
 import 'package:chatapp/themes/theme.dart';
 import 'package:flutter/material.dart';
 import 'pages/welcome_page.dart';
 import 'services/authentication.dart';
-import 'package:intl/date_symbol_data_file.dart';
 
 
 void main() => runApp(MyApp());

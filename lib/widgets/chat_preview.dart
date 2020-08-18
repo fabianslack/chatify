@@ -7,31 +7,33 @@ class ChatPreview extends StatelessWidget
   String _lastMessage;
   int _timestamp;
   AssetImage _image;
+  bool _read;
 
-  ChatPreview(this._username, this._lastMessage, this._timestamp, this._image);
+  ChatPreview(this._username, this._lastMessage, this._timestamp, this._image, this._read);
 
   @override
   Widget build(BuildContext context) 
   {
     DateTime time = DateTime.fromMillisecondsSinceEpoch(_timestamp);
     return Container(
+      margin: const EdgeInsets.symmetric(vertical:7),
       width: double.infinity,
-      height: 50,
+      height: 45,
       padding: const EdgeInsets.symmetric(
-        horizontal: 20
+        horizontal: 10
       ),
       child: Row(
         children: <Widget>[
           CircleAvatar(
             backgroundImage: _image,
-            radius: 25,
+            radius: 24,
           ),
           SizedBox(
-            width: 20,
+            width: 10,
           ),
           Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -40,45 +42,43 @@ class ChatPreview extends StatelessWidget
                       _username,
                       overflow: TextOverflow.clip,
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20
+                        fontWeight: FontWeight.w500,
+                        fontSize: 18,
+                        color: Colors.black
                       )
                     ),
-                    Row(
-                      children: <Widget>[
-                        Text(
+                    Text(
                           time.hour.toString() + ":" + (time.minute.toString().length > 1 ? time.minute.toString() : "0" + time.minute.toString()),
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            color: Colors.grey
                           ),
                         ),
-                        Icon(
-                          Icons.navigate_next,
-                          color: Colors.grey[400],
-                          size: 30,
-                        )
-                      ],
-                    )
                   ]
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Flexible(
+                    Expanded(
                       child: Text(
                         _lastMessage,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 16
+                          fontSize: 14,
+                          color: Colors.grey
                         )
                       ),
                     ),
-                    Icon(
-                      Icons.pin_drop,
-                      size: 20,
-                      color: Colors.white,
-                    )
-                  ],
+                    _read ? Container(
+                      height: 15,
+                      width: 15,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.blue
+                      ),
+                    ) : Container()
+                  ]
                 )
               ],
             )
