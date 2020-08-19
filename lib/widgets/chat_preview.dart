@@ -5,10 +5,12 @@ import 'package:chatapp/pages/home/chat.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
+import 'package:chatapp/widgets/chat_image.dart';
+import 'package:chatapp/widgets/full_photo.dart';
+import 'package:chatapp/widgets/user_image_hero.dart';
 import 'package:flutter/material.dart';
 
-class ChatPreview extends StatefulWidget 
-{
+class ChatPreview extends StatefulWidget {
   var _ref;
   String _username;
   bool _message;
@@ -20,16 +22,14 @@ class ChatPreview extends StatefulWidget
   _ChatPreviewState createState() => _ChatPreviewState();
 }
 
-class _ChatPreviewState extends State<ChatPreview> 
-{
+class _ChatPreviewState extends State<ChatPreview> {
   Timer _timer;
 
   bool _online;
   String _imageRef;
 
   @override
-  void initState() 
-  {
+  void initState() {
     super.initState();
     _online = false;
     _timer = Timer.periodic(Duration(minutes: 1), (timer) => onlineState());
@@ -37,45 +37,36 @@ class _ChatPreviewState extends State<ChatPreview>
   }
 
   @override
-  void dispose() 
-  {
+  void dispose() {
     super.dispose();
     _timer.cancel();
   }
 
-  void loadProfileImage()
-  {
-    FriendsService.loadImage(widget._id).then((value) 
-    {
-      setState(() 
-      {
+  void loadProfileImage() {
+    FriendsService.loadImage(widget._id).then((value) {
+      setState(() {
         _imageRef = value;
       });
     });
   }
 
-  void onlineState() 
-  {
+  void onlineState() {
     loadProfileImage();
-    MessageService.getOnlineState(widget._id).then((value) 
-    {
+    MessageService.getOnlineState(widget._id).then((value) {
       setState(() {
         _online = value;
       });
     });
   }
 
-  void handleTap() 
-  {
+  void handleTap() {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) =>
-          ChatPage(widget._username, _imageRef, widget._id),
+      builder: (context) => ChatPage(widget._username, _imageRef, widget._id),
     ));
   }
 
   @override
-  Widget build(BuildContext context) 
-  {
+  Widget build(BuildContext context) {
     DateTime time = widget._message
         ? DateTime.fromMillisecondsSinceEpoch(widget._ref["timestamp"])
         : DateTime(0);
