@@ -92,7 +92,8 @@ class Auth
           'friendsId' : [],
           'stories': {},
           'requests' : [],
-          'online' : false
+          'online' : false,
+          'profileUrl' : ""
         });
         userID = user.uid;
       }

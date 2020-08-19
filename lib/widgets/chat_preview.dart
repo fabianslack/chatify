@@ -123,7 +123,7 @@ class _ChatPreviewState extends State<ChatPreview>
                           style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 12,
-                              color: Colors.grey),
+                              color: Colors.grey[600]),
                         ),
                       ]),
                   Row(
@@ -132,7 +132,7 @@ class _ChatPreviewState extends State<ChatPreview>
                         Expanded(
                           child: Text(widget._message ? widget._ref["content"] : "",
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 14, color: Colors.grey)),
+                              style: TextStyle(fontSize: 14, color: Colors.grey[600])),
                         ),
                         widget._message && !widget._ref["received"] && widget._ref["from"] != Auth.getUserID()
                             ? Container(

@@ -6,6 +6,7 @@ import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/chat_preview.dart';
 import 'package:chatapp/widgets/status_bar_item.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget 
@@ -105,7 +106,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     return Container(
       width: double.infinity,
       height: 1,
-      color: Colors.grey[200],
+      color: Colors.grey,
     );
   }
 
@@ -194,7 +195,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                 true,
                 snapshot.data["friendsId"][index]
               ); 
-
             } 
             return ChatPreview(
               snapshot.data["friends"][index],
@@ -264,7 +264,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
       leading: IconButton(
         icon: Icon(
           Icons.add,
-          color: Colors.grey,
+          color: Colors.grey[600],
           size: 30
         ),
         onPressed: () 
@@ -276,7 +276,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
         IconButton(
           icon: Icon(
             Icons.search,
-            color: Colors.grey,
+            color: Colors.grey[600],
             size: 30
           ),
           onPressed: () 
