@@ -71,7 +71,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             IconButton(
               icon: Icon(Icons.check),
               onPressed: () {
-                print(mail);
                 Navigator.pop(context);
                 //Auth().setUserMail(mail, password);
               },
@@ -117,7 +116,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           child: FutureBuilder(
             future: Db().getUserImageRef(),
             builder: (context, AsyncSnapshot snapshot) {
-              print(snapshot.data);
               if (snapshot.connectionState == ConnectionState.done) {
                 if (snapshot.hasData) {
                   return Container(
@@ -252,7 +250,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    print("testset");
     return Container(
       child: getUserWidget(),
     );
