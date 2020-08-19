@@ -56,6 +56,11 @@ class FriendsService
     snapshots();
   }
 
+  static Future<String> loadImage(String friendId)
+  {
+    return Firestore.instance.collection("users").document(friendId).get().then((value) => value["profileImage"]);
+  }
+
   Future<String> getUsernameForId(String id) async
   {
     return Firestore.instance.collection("users").document(id).get().then((value) => value["username"]);

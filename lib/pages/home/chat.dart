@@ -18,8 +18,8 @@ class ChatPage extends StatefulWidget
 {
   final String _name;
   final String id;
-  final AssetImage _image;
-  ChatPage(this._name, this._image, this.id);
+  final String _imageRef;
+  ChatPage(this._name, this._imageRef, this.id);
   @override
   _ChatPageState createState() => _ChatPageState();
 }
@@ -142,30 +142,38 @@ class _ChatPageState extends State<ChatPage>
       titleSpacing: 0,
       elevation: 0,
       backgroundColor: Colors.white,
-      title: _online ? Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      title: Row(
         children: [
-          Text(
-          widget._name,
-          style: TextStyle(
-            fontSize: 22,
-            color: Colors.black
+          CircleAvatar(
+            backgroundImage: widget._imageRef != null ? NetworkImage(widget._imageRef) : AssetImage("assets/logo.png")
+          ),
+          SizedBox(width: 10,),
+          _online ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+              widget._name,
+              style: TextStyle(
+                fontSize: 22,
+                color: Colors.black
+                ),
+              ),
+              Text(
+                "online",
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey[600]
+                )
+              )
+            ],
+          ) : Text(
+            widget._name,
+            style: TextStyle(
+              fontSize: 24,
+              color: Colors.black
             ),
           ),
-          Text(
-            "online",
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey[600]
-            )
-          )
         ],
-      ) : Text(
-        widget._name,
-        style: TextStyle(
-          fontSize: 24,
-          color: Colors.black
-        ),
       ),
       leading: IconButton(
         icon: Icon(

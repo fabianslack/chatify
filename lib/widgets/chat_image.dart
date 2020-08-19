@@ -72,7 +72,7 @@ class ChatImage extends StatelessWidget
              ),
              onPressed: () {
                Navigator.push(
-                   context, MaterialPageRoute(builder: (context) => FullPhoto(url: _ref("content"))));
+                   context, MaterialPageRoute(builder: (context) => FullPhoto(url: _ref["content"])));
              },
            ),
            _left ? Text(

@@ -5,6 +5,7 @@ import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/chat_preview.dart';
 import 'package:chatapp/widgets/status_bar_item.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -106,7 +107,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     return Container(
       width: double.infinity,
       height: 1,
-      color: Colors.grey,
+      color: Colors.grey[200],
     );
   }
 
@@ -193,8 +194,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                 snapshot.data["friends"][index], 
                 chatsnapshot.data.documents[0],
                 true,
-                snapshot.data["friendsId"][index]
-              ); 
+                snapshot.data["friendsId"][index],
+              );
             } 
             return ChatPreview(
               snapshot.data["friends"][index],

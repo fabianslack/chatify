@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:chatapp/pages/home/chat.dart';
 import 'package:chatapp/services/authentication.dart';
+import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
 import 'package:flutter/material.dart';
 
 class ChatPreview extends StatefulWidget 
 {
-
   var _ref;
   String _username;
   bool _message;
@@ -22,10 +22,12 @@ class ChatPreview extends StatefulWidget
 class _ChatPreviewState extends State<ChatPreview> 
 {
   Timer _timer;
+
   bool _online;
+  String _imageRef;
 
   @override
-  void initState()
+  void initState() 
   {
     super.initState();
     _online = false;
@@ -34,75 +36,81 @@ class _ChatPreviewState extends State<ChatPreview>
   }
 
   @override
-  void dispose()
+  void dispose() 
   {
     super.dispose();
     _timer.cancel();
   }
 
-  void onlineState()
+  void loadProfileImage()
   {
-    MessageService.getOnlineState(widget._id).then((value) 
+    FriendsService.loadImage(widget._id).then((value) 
     {
       setState(() 
       {
+        _imageRef = value;
+      });
+    });
+  }
+
+  void onlineState() 
+  {
+    loadProfileImage();
+    MessageService.getOnlineState(widget._id).then((value) 
+    {
+      setState(() {
         _online = value;
       });
     });
   }
 
-  void handleTap()
+  void handleTap() 
   {
     Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => ChatPage(
-          widget._username,
-          AssetImage("assets/logo.png"),
-          widget._id),
-      ));
+      builder: (context) =>
+          ChatPage(widget._username, _imageRef, widget._id),
+    ));
   }
 
   @override
   Widget build(BuildContext context) 
   {
-    DateTime time = widget._message ? DateTime.fromMillisecondsSinceEpoch(widget._ref["timestamp"]) : DateTime(0);
+    DateTime time = widget._message
+        ? DateTime.fromMillisecondsSinceEpoch(widget._ref["timestamp"])
+        : DateTime(0);
     return GestureDetector(
       onTap: () => handleTap(),
-          child: Container(
-        margin: const EdgeInsets.symmetric(vertical:7),
-        width: double.infinity,
-        height: 45,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 10
-        ),
-        child: Row(
-          children: <Widget>[
-            Container(
-              child: Stack(
+      child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 7),
+          width: double.infinity,
+          height: 45,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            children: <Widget>[
+              Container(
+                  child: Stack(
                 children: [
                   CircleAvatar(
-                    backgroundImage: AssetImage("assets/logo.png"),
+                    backgroundImage: _imageRef != null ? NetworkImage(_imageRef) : AssetImage("assets/logo.png"),
                     radius: 24,
                   ),
                   Positioned(
-                    bottom: 0.0,
-                    right: 0.0,
-                    child: Container(
-                      height: 15,
-                      width: 15,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _online ?  Colors.green : Colors.red
-                      ),
-                    )
-                  )
+                      bottom: 0.0,
+                      right: 0.0,
+                      child: Container(
+                        height: 15,
+                        width: 15,
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _online ? Colors.green : Colors.red),
+                      ))
                 ],
-              )
-            ),
-            SizedBox(
-              width: 10,
-            ),
-            Expanded(
-              child: Column(
+              )),
+              SizedBox(
+                width: 10,
+              ),
+              Expanded(
+                  child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Row(
@@ -130,11 +138,15 @@ class _ChatPreviewState extends State<ChatPreview>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Expanded(
-                          child: Text(widget._message ? widget._ref["content"] : "",
+                          child: Text(
+                              widget._message ? widget._ref["content"] : "",
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.grey)),
                         ),
-                        widget._message && !widget._ref["received"] && widget._ref["from"] != Auth.getUserID()
+                        widget._message &&
+                                !widget._ref["received"] &&
+                                widget._ref["from"] != Auth.getUserID()
                             ? Container(
                                 height: 15,
                                 width: 15,
