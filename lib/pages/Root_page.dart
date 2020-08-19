@@ -29,7 +29,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver
     super.initState();
     _auth = new Auth();
     _auth.setOnlineStatus(true);
-    WidgetsBinding.instance.addObserver(this);;
+    WidgetsBinding.instance.addObserver(this);
     _bodies = [Home(),  ProfilePage(), ProfileSettingsPage()];
   }
 

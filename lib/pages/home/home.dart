@@ -36,7 +36,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   void initState()
   {
     super.initState();
-    print("home");
     _friendsService = FriendsService();
     _auth = Auth();
     _animationController = AnimationController(

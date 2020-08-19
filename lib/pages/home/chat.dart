@@ -144,11 +144,33 @@ class _ChatPageState extends State<ChatPage>
       backgroundColor: Colors.white,
       title: Row(
         children: [
-          Hero(
-            tag: 'iamge' + widget._name,
-            child: CircleAvatar(
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                new PageRouteBuilder(
+                  opaque: false,
+                  barrierDismissible:true,
+                  pageBuilder: (BuildContext context, _, __) {
+                    return Hero(
+                      tag: widget._imageRef,
+                      flightShuttleBuilder: (flightContext, animation, direction,
+                          fromContext, toContext) {
+                        return AlertDialog(
+                          content: Image.network(widget._imageRef),
+                        );
+                      },
+                      child: AlertDialog(
+                        content: Image.network(widget._imageRef),
+                      )
+                    );
+                  }
+                )
+            );
+            },
+            child: Hero(tag: widget._imageRef, child: CircleAvatar(
               backgroundImage: widget._imageRef != null ? NetworkImage(widget._imageRef) : AssetImage("assets/logo.png")
-            ),
+              )
+            )
           ),
           SizedBox(width: 10,),
           _online ? Column(
