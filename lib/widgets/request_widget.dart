@@ -1,11 +1,16 @@
-import 'package:chatapp/services/chat_loader.dart';
+import 'package:chatapp/services/friends_service.dart';
 import 'package:flutter/material.dart';
 
 class RequestWidget extends StatelessWidget 
 {
   AssetImage _image;
   final String _id;
-  RequestWidget(this._image, this._id);
+  FriendsService _friendsService;
+
+  RequestWidget(this._image, this._id)
+  {
+    _friendsService = FriendsService();
+  }
 
   @override
   Widget build(BuildContext context) 
@@ -23,7 +28,7 @@ class RequestWidget extends StatelessWidget
           Padding(
             padding: const EdgeInsets.only(left: 20),
             child: FutureBuilder(
-              future: ChatLoader.getUsernameForUID(_id),
+              future: _friendsService.getUsernameForId(_id),
               builder: (context, snapshot) => snapshot.data != null ? Text(
                 snapshot.data,
                 style: TextStyle(
@@ -55,8 +60,8 @@ class RequestWidget extends StatelessWidget
             ),
             onPressed: () 
             {
-              ChatLoader.addFriend(_id);
-              ChatLoader.removeRequest(_id);
+              _friendsService.addFriend(_id);
+              _friendsService.removeRequest(_id);
             },
           ),
           FlatButton(
@@ -78,7 +83,7 @@ class RequestWidget extends StatelessWidget
                 ),
               ),
             ),
-            onPressed: () => ChatLoader.removeRequest(_id),
+            onPressed: () => _friendsService.removeRequest(_id),
           ),
           
         ],

@@ -1,13 +1,12 @@
 
 import 'package:chatapp/pages/home/search_page.dart';
 import 'package:chatapp/services/authentication.dart';
-import 'package:chatapp/services/chat_loader.dart';
+import 'package:chatapp/services/friends_service.dart';
+import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/chat_preview.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chatapp/widgets/status_bar_item.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'chat.dart';
 
 class Home extends StatefulWidget 
 {
@@ -18,7 +17,6 @@ class Home extends StatefulWidget
 class _HomeState extends State<Home> with TickerProviderStateMixin
 {
   TextEditingController _controller = TextEditingController();
-  ChatLoader _chatLoader = ChatLoader();
   SharedPreferences _preferences;
   Auth _auth;
 
@@ -29,14 +27,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   AnimationController _animationController;
   Animation<Offset> _offset;
   
-
-  double _height;
+  FriendsService _friendsService;
   double _width;
 
   @override
   void initState()
   {
     super.initState();
+    print("home");
+    _friendsService = FriendsService();
     _auth = Auth();
     _animationController = AnimationController(
       vsync: this,
@@ -56,6 +55,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   void handleLogOut() async
   {
+    _auth.setOnlineStatus(false);
     await _auth.signOut();
     FocusScope.of(context).unfocus();
     Navigator.pushReplacementNamed(context, 'welcome-page');
@@ -70,16 +70,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                   
   }
 
-  void handleTap(String username, String userid)
-  {
-     Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => ChatPage(
-          username,
-          AssetImage("assets/logo.png"),
-          userid),
-      ));
-  }
-
   String getChatRoomId(String id)
   {
     if(id.hashCode >= Auth.getUserID().hashCode)
@@ -91,6 +81,32 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
       return '' + (Auth.getUserID().hashCode - id.hashCode).toString();
 
     }
+  }
+
+  Widget getStoryRow()
+  {
+    return Container(
+      height: 80,
+      child: ListView.builder(
+        physics: BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal:10),
+        scrollDirection: Axis.horizontal,
+        itemCount: 10,
+        itemBuilder: (context, index)
+        {
+          return StatusBarItem("testtestestset", AssetImage("assets/logo.png"));
+        }
+      ),
+    );
+  }
+
+  Widget getBorder()
+  {
+    return Container(
+      width: double.infinity,
+      height: 1,
+      color: Colors.grey[200],
+    );
   }
 
   Widget getSearchBar()
@@ -158,64 +174,67 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     );
   }
 
+  Widget getChats()
+  {
+    return StreamBuilder(
+      stream: _friendsService.getStream(),
+      builder: (context, snapshot) => snapshot.data != null ? ListView.separated(
+        shrinkWrap: true,
+        physics: BouncingScrollPhysics(),
+        itemCount: snapshot.data["friends"].length,
+        itemBuilder: (context, index) => StreamBuilder(
+          stream: MessageService.getHomeStream(getChatRoomId(snapshot.data["friendsId"][index])),
+          builder: (context, chatsnapshot)
+          {
+            if(chatsnapshot.hasData && chatsnapshot.data.documents.length > 0)
+            {
+              return ChatPreview(
+                snapshot.data["friends"][index], 
+                chatsnapshot.data.documents[0],
+                true,
+                snapshot.data["friendsId"][index]
+              ); 
+
+            } 
+            return ChatPreview(
+              snapshot.data["friends"][index],
+              null, 
+              false, 
+              snapshot.data["friendsId"][index]
+            );
+          } 
+        ),
+        separatorBuilder: (context, index)
+        {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(65, 0, 10, 0),
+            child: Container(
+              height: 1,
+              width: double.infinity,
+              color: Colors.grey[200],
+            ),
+          );
+        },
+      ) : Container(),
+    );
+  }
+
   Widget getBody()
   {
-    return Padding(
-      padding: const EdgeInsets.only(top:20),
-      child: Stack(
-        children: <Widget>[
-          StreamBuilder(
-            stream: _chatLoader.getStream(),
-            builder: (context, snapshot) => snapshot.data != null ? ListView.separated(
-              physics: BouncingScrollPhysics(),
-              itemCount: snapshot.data["friends"].length,
-              itemBuilder: (context, index) => GestureDetector(
-                child: StreamBuilder(
-                  stream: Firestore.instance.collection("chats").
-                    document(getChatRoomId(snapshot.data["friendsId"][index])).
-                    collection("messages").
-                    orderBy("timestamp", descending: true).
-                    limit(1).
-                    snapshots(),
-                builder: (context, chatsnapshot) =>  !chatsnapshot.hasError && chatsnapshot.hasData && chatsnapshot.data.documents.length > 0 ? 
-                  ChatPreview(
-                    snapshot.data["friends"][index], 
-                    chatsnapshot.data.documents[0]["content"], 
-                    chatsnapshot.data.documents[0]["timestamp"], 
-                    AssetImage("assets/logo.png"),
-                    !chatsnapshot.data.documents[0]["received"] && chatsnapshot.data.documents[0]["from"] != Auth.getUserID(),
-                  ) 
-                    : 
-                  ChatPreview(
-                    snapshot.data["friends"][index],
-                    "",
-                    0,
-                    AssetImage("assets/logo.png"),
-                    false
-                  ),
-                ),
-                onTap: () => handleTap(snapshot.data["friends"][index], snapshot.data["friendsId"][index])
-              ),
-              separatorBuilder: (context, index)
-              {
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(65, 0, 10, 0),
-                  child: Container(
-                    height: 1,
-                    width: double.infinity,
-                    color: Colors.grey[200],
-                  ),
-                );
-              },
-            ) : Container(),
-          ),
-          //getLogoutButton(),
-          SlideTransition(
-            position: _offset,
-            child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,
-          ),
-        ],
-      ),
+    return Column(
+      children: <Widget>[
+        getStoryRow(),
+        getBorder(),
+        SizedBox(
+          height: 5,
+        ),
+        getChats(),
+        //getLogoutButton(),
+        SlideTransition(
+          position: _offset,
+          child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,
+        ),
+      ],
     );
   }
   
@@ -278,7 +297,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) 
   {
-    _height = MediaQuery.of(context).size.height;
     _width = MediaQuery.of(context).size.width;
     loadChats();
     return Scaffold(

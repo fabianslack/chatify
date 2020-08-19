@@ -205,7 +205,7 @@ class _SignupRootPageState extends State<SignupRootPage>
   {
     return _keyBoardVisible() ? 
       SizedBox(
-        height: height*0.48,
+        height: height*0.4,
       )
      : SizedBox(
        height: height*0.1,

@@ -1,5 +1,5 @@
 
-import 'package:chatapp/services/chat_loader.dart';
+import 'package:chatapp/services/friends_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,12 +19,15 @@ class _SearchUserWidgetState extends State<SearchUserWidget>
   double height;
   double width;
 
+  FriendsService _service;
+
   bool _story = true;
 
   static List<String> _recentSearches;
 
   _SearchUserWidgetState()
   {
+    _service = FriendsService();
     if(_recentSearches == null)
     {
       _recentSearches = List();
@@ -47,7 +50,8 @@ class _SearchUserWidgetState extends State<SearchUserWidget>
     }
     SharedPreferences pref = await SharedPreferences.getInstance();
     pref.setStringList("recentSearches", _recentSearches);
-    ChatLoader.addRequest(widget.id);
+    _service.addRequest(widget.id);
+    
   }
 
   void handleClickChat()

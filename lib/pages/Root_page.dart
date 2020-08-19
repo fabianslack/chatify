@@ -3,10 +3,9 @@ import 'package:chatapp/themes/theme.dart';
 import 'package:flutter/material.dart';
 import 'home/home.dart';
 import 'profile_page.dart';
-import 'story_page.dart';
+import 'usersettings_page.dart';
 
-class RootPage extends StatefulWidget
-{
+class RootPage extends StatefulWidget {
   @override
   _RootPageState createState() => _RootPageState();
 }
@@ -17,7 +16,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver
   int _selectedIndex = 0;
   Home _home;
   ProfilePage _profilePage;
-  StoryPage _storyPage;
+  ProfileSettingsPage _storyPage;
   List<Widget> _bodies;
   Auth _auth;
 
@@ -26,16 +25,12 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver
   {
     super.initState();
     _auth = new Auth();
+    _auth.setOnlineStatus(true);
     WidgetsBinding.instance.addObserver(this);
     _home = Home();
     _profilePage = ProfilePage();
-    _storyPage = StoryPage();
-    _bodies = [
-      _home, 
-      _profilePage,
-      _storyPage
-    ];
-
+    _storyPage = ProfileSettingsPage();
+    _bodies = [_home, _profilePage, _storyPage];
   }
 
   @override
@@ -60,19 +55,15 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver
       }
       case AppLifecycleState.inactive:
       {
-        Future.delayed(Duration(minutes: 1), ()
-        {
           _auth.setOnlineStatus(false);
-        });
+        
 
         break;
       }
       case AppLifecycleState.paused:
       {
-        Future.delayed(Duration(minutes: 1), ()
-        {
           _auth.setOnlineStatus(false);
-        });
+
         break;
       }
     }
@@ -82,9 +73,8 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver
   {
     return BottomNavigationBar(
       elevation: 0,
-      onTap: (index) 
-      {
-        _controller.jumpToPage(index);
+      onTap: (index) {
+        _controller.animateToPage(index, duration: Duration(milliseconds: 200), curve: Curves.easeIn);
       },
       currentIndex: _selectedIndex,
       type: BottomNavigationBarType.fixed,
@@ -93,45 +83,47 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver
       showUnselectedLabels: false,
       selectedItemColor: Colors.white,
       unselectedItemColor: Colors.grey,
-      items: [Icons.chat, Icons.search, Icons.share, Icons.supervised_user_circle]
+      items: [Icons.chat, Icons.share, Icons.supervised_user_circle]
           .asMap()
           .map((key, value) => MapEntry(
-          key, BottomNavigationBarItem(
-          title: Text(''),
-          icon: Container(
-            padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 16.0),
-            decoration: BoxDecoration(
-                color: _selectedIndex == key
-                    ? Colors.red
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(20.0)
-            ),
-            child: Icon(value, color: Colors.white,),
-          )
-      )
-      )
-      ).values.toList(),
+              key,
+              BottomNavigationBarItem(
+                  title: Text(''),
+                  icon: Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 6.0, horizontal: 16.0),
+                    decoration: BoxDecoration(
+                        color: _selectedIndex == key
+                            ? Colors.red
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20.0)),
+                    child: Icon(
+                      value,
+                      color: Colors.white,
+                    ),
+                  ))))
+          .values
+          .toList(),
     );
   }
 
-  Widget getBody() 
-  {
-   return PageView(
-     children: _bodies,
-     onPageChanged: (value)
-     {
-       setState(() 
-       {
-          _selectedIndex = value;  
-       });
-     },
-     controller: _controller,
-   ); 
+  Widget getBody() {
+    return PageView(
+      children: _bodies,
+      onPageChanged: (value) {
+        setState(() {
+          _selectedIndex = value;
+        });
+      },
+      controller: _controller,
+    );
   }
 
   @override
-  Widget build(BuildContext context) 
-  {
-    return Scaffold(body: getBody(), bottomNavigationBar: getBottomNavigationBar(),);
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: getBody(),
+      bottomNavigationBar: getBottomNavigationBar(),
+    );
   }
 }

@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/chat_image.dart';
 import 'package:chatapp/widgets/chat_message_widget.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,7 +19,6 @@ class ChatPage extends StatefulWidget
   final String _name;
   final String id;
   final AssetImage _image;
-
   ChatPage(this._name, this._image, this.id);
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -28,7 +27,6 @@ class ChatPage extends StatefulWidget
 class _ChatPageState extends State<ChatPage> 
 {
   double _width;
-  double _height;
 
   MessageService _service;
 
@@ -36,6 +34,8 @@ class _ChatPageState extends State<ChatPage>
   String peerId;
   String chatID;
   File _imageFile;
+  bool _online;
+  Timer _timer;
 
   bool _sharePressed = false;
 
@@ -48,11 +48,24 @@ class _ChatPageState extends State<ChatPage>
   void initState()
   {
     super.initState();
+    _online = false;
     chatID = '';
     peerId = widget.id;
     init();
     _service = MessageService(chatID);
     _imagePicker = ImagePicker();
+    _timer = Timer.periodic(Duration(minutes: 1), (timer) => onlineState());
+    onlineState();
+  }
+
+  @override
+  void dispose()
+  {
+    super.dispose();
+    if(_timer != null)
+    {
+      _timer.cancel();
+    }
   }
 
   void init() 
@@ -65,7 +78,6 @@ class _ChatPageState extends State<ChatPage>
     else
     {
       chatID = '' + (id.hashCode - peerId.hashCode).toString();
-
     }
   }
 
@@ -81,6 +93,16 @@ class _ChatPageState extends State<ChatPage>
     {
       uploadFile();
     }
+  }
+
+  void onlineState()
+  {
+    MessageService.getOnlineState(peerId).then((value) 
+    {
+      setState(() {
+        _online = value;
+      });
+    });
   }
 
   void uploadFile() async
@@ -110,6 +132,8 @@ class _ChatPageState extends State<ChatPage>
   {
     _service.likeMessage(timestamp, liked);
   }
+
+ 
   
 
   Widget getAppBar()
@@ -118,7 +142,25 @@ class _ChatPageState extends State<ChatPage>
       titleSpacing: 0,
       elevation: 0,
       backgroundColor: Colors.white,
-      title: Text(
+      title: _online ? Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+          widget._name,
+          style: TextStyle(
+            fontSize: 22,
+            color: Colors.black
+            ),
+          ),
+          Text(
+            "online",
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[600]
+            )
+          )
+        ],
+      ) : Text(
         widget._name,
         style: TextStyle(
           fontSize: 24,
@@ -294,7 +336,6 @@ class _ChatPageState extends State<ChatPage>
   Widget build(BuildContext context) 
   {
     _width = MediaQuery.of(context).size.width;
-    _height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: getAppBar(),
       body: getBody(),

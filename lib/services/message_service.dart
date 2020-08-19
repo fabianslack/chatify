@@ -27,7 +27,7 @@ class MessageService {
     document(timestamp.toString()).
     updateData(
       {
-        'received' :true
+        'received' : true
       }
     );
   }
@@ -69,6 +69,32 @@ class MessageService {
         'liked' : liked
       }
     );
+  }
+
+  static Stream getHomeStream(String roomID)
+  {
+    return Firestore.
+    instance.
+    collection("chats").
+    document(roomID).
+    collection("messages").
+    orderBy("timestamp", descending: true).
+    limit(1).
+    snapshots();
+  }
+
+  static Future<bool> getOnlineState(String id)
+  {
+    return Firestore.instance.collection("users").document(id).get().then((value) => value["online"]); 
+  }
+
+  static Stream getOnlineStatus(String id)
+  {
+    return Firestore.
+    instance.
+    collection("users").
+    document(id).
+    snapshots();
   }
 
 

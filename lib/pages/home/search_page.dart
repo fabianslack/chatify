@@ -1,5 +1,3 @@
-
-import 'package:chatapp/services/file_service.dart';
 import 'package:chatapp/services/search.dart';
 import 'package:chatapp/themes/theme.dart';
 import 'package:chatapp/widgets/recent_search_widget.dart';
@@ -19,7 +17,6 @@ class SearchPage extends StatefulWidget
 
 class _SearchPageState extends State<SearchPage> 
 {
-  FileService _fileService = FileService();
   SearchService _searchService = SearchService();
 
   List<String> _recentID = List();
@@ -36,7 +33,6 @@ class _SearchPageState extends State<SearchPage>
     if(widget._query.length > 0)
     {
       _searchResult = await _searchService.getSuggestionsUsers(widget._query);
-      //_searchResult = _searchService.getUsernamesFromId(results);
       setState(() {
         _dataLoaded = true;
       });

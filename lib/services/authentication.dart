@@ -121,7 +121,7 @@ class Auth
 
   void setOnlineStatus(bool online)
   {
-    Firestore.instance.collection("users").document(userID).setData(
+    Firestore.instance.collection("users").document(userID).updateData(
       {
         'online' : online
       }
