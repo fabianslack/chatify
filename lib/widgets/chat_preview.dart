@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:chatapp/pages/home/chat.dart';
 import 'package:chatapp/services/authentication.dart';
@@ -90,9 +91,12 @@ class _ChatPreviewState extends State<ChatPreview>
               Container(
                   child: Stack(
                 children: [
-                  CircleAvatar(
-                    backgroundImage: _imageRef != null ? NetworkImage(_imageRef) : AssetImage("assets/logo.png"),
-                    radius: 24,
+                  Hero(
+                    child: CircleAvatar(
+                      backgroundImage: _imageRef != null ? NetworkImage(_imageRef) : AssetImage("assets/logo.png"),
+                      radius: 24,
+                    ),
+                    tag: "image" + widget._username,
                   ),
                   Positioned(
                       bottom: 0.0,
@@ -114,24 +118,29 @@ class _ChatPreviewState extends State<ChatPreview>
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Text(widget._username,
-                            overflow: TextOverflow.clip,
-                            style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                                color: Colors.black)),
-                        Text(
-                          time.hour.toString() +
-                              ":" +
-                              (time.minute.toString().length > 1
-                                  ? time.minute.toString()
-                                  : "0" + time.minute.toString()),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Hero(
+                        tag: 'username' + widget._username,
+                        child: Text(widget._username,
+                          overflow: TextOverflow.clip,
                           style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                              color: Colors.grey[600]),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            color: Colors.black
+                          )
+                        ),
+                      ),
+                      Text(
+                        time.hour.toString() +
+                            ":" +
+                            (time.minute.toString().length > 1
+                                ? time.minute.toString()
+                                : "0" + time.minute.toString()),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            color: Colors.grey[600]),
                         ),
                       ]),
                   Row(
