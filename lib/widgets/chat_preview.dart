@@ -4,9 +4,6 @@ import 'package:chatapp/pages/home/chat.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
-import 'package:chatapp/widgets/chat_image.dart';
-import 'package:chatapp/widgets/full_photo.dart';
-import 'package:chatapp/widgets/user_image_hero.dart';
 import 'package:flutter/material.dart';
 
 class ChatPreview extends StatefulWidget {

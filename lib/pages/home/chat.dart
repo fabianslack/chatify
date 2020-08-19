@@ -144,8 +144,36 @@ class _ChatPageState extends State<ChatPage>
       backgroundColor: Colors.white,
       title: Row(
         children: [
-          CircleAvatar(
-            backgroundImage: widget._imageRef != null ? NetworkImage(widget._imageRef) : AssetImage("assets/logo.png")
+          FlatButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                new PageRouteBuilder(
+                  opaque: false,
+                  barrierDismissible:true,
+                  pageBuilder: (BuildContext context, _, __) {
+                      return Hero(
+                              tag: widget._imageRef,
+                              flightShuttleBuilder: (flightContext, animation, direction,
+                                  fromContext, toContext) {
+                                return AlertDialog(
+                                  content: Image.network(widget._imageRef),
+                                );
+                              },
+                              child: AlertDialog(
+                                content: Image.network(widget._imageRef),
+                              )
+                      );
+                    }
+                )
+            );
+            },
+            child: 
+              widget._imageRef != null ?
+              Hero(tag: widget._imageRef, child: CircleAvatar(backgroundImage: NetworkImage(widget._imageRef),))
+              :
+            CircleAvatar(
+              backgroundImage: AssetImage("assets/logo.png"),
+            ),
           ),
           SizedBox(width: 10,),
           _online ? Column(
