@@ -90,7 +90,7 @@ class Auth
           'e-mail': email,
           'friends' : [],
           'friendsId' : [],
-          'stories': {},
+          'stories': [],
           'requests' : [],
           'online' : false,
           'profileUrl' : ""

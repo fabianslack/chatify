@@ -167,7 +167,7 @@ class _ChatPageState extends State<ChatPage>
                 )
             );
             },
-            child: Hero(tag: widget._imageRef, child: CircleAvatar(
+            child: Hero(tag: 'image'+widget._name, child: CircleAvatar(
               backgroundImage: widget._imageRef != null ? NetworkImage(widget._imageRef) : AssetImage("assets/logo.png")
               )
             )
@@ -177,7 +177,7 @@ class _ChatPageState extends State<ChatPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Hero(
-                tag: 'username' + widget._name,
+                tag: widget._name,
                 child: Text(
                 widget._name,
                 style: TextStyle(
@@ -194,11 +194,14 @@ class _ChatPageState extends State<ChatPage>
                 )
               )
             ],
-          ) : Text(
-            widget._name,
-            style: TextStyle(
-              fontSize: 24,
-              color: Colors.black
+          ) : Hero(
+            tag: '_'+widget._name,
+              child: Text(
+              widget._name,
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.black
+              ),
             ),
           ),
         ],
@@ -227,7 +230,6 @@ class _ChatPageState extends State<ChatPage>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 5),
       width: _width,
-      height: 50,
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(

@@ -84,7 +84,7 @@ class _ChatPreviewState extends State<ChatPreview> {
                       backgroundImage: _imageRef != null ? NetworkImage(_imageRef) : AssetImage("assets/logo.png"),
                       radius: 24,
                     ),
-                    tag: "image" + widget._username,
+                    tag: 'image'+widget._username,
                   ),
                   Positioned(
                       bottom: 0.0,
@@ -109,7 +109,7 @@ class _ChatPreviewState extends State<ChatPreview> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       Hero(
-                        tag: 'username' + widget._username,
+                        tag: widget._username,
                         child: Text(widget._username,
                           overflow: TextOverflow.clip,
                           style: TextStyle(

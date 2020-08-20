@@ -28,7 +28,7 @@ class RequestWidget extends StatelessWidget
           Padding(
             padding: const EdgeInsets.only(left: 20),
             child: FutureBuilder(
-              future: _friendsService.getUsernameForId(_id),
+              future: FriendsService.getUsernameForId(_id),
               builder: (context, snapshot) => snapshot.data != null ? Text(
                 snapshot.data,
                 style: TextStyle(

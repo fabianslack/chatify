@@ -1,11 +1,9 @@
-
 import 'package:chatapp/pages/home/search_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/chat_preview.dart';
 import 'package:chatapp/widgets/status_bar_item.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -88,16 +86,28 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   {
     return Container(
       height: 80,
-      child: ListView.builder(
-        physics: BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal:10),
-        scrollDirection: Axis.horizontal,
-        itemCount: 10,
-        itemBuilder: (context, index)
+      child: FutureBuilder(
+        future: _friendsService.getStories(),
+        builder: (context, snapshot)
         {
-          return StatusBarItem("testtestestset", AssetImage("assets/logo.png"));
+          if(snapshot.hasData && !snapshot.hasError && snapshot.data.length > 0)
+          {
+            
+            return ListView.builder(
+              physics: BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal:10),
+              scrollDirection: Axis.horizontal,
+              itemCount: snapshot.data.length,
+              itemBuilder: (context, index)
+              {
+                print(snapshot.data[index]);
+                return StatusBarItem(snapshot.data[index]);
+              } 
+            );
+          }
+          return Container();
         }
-      ),
+      )
     );
   }
 
@@ -229,7 +239,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
           height: 5,
         ),
         getChats(),
-        //getLogoutButton(),
+        getLogoutButton(),
         SlideTransition(
           position: _offset,
           child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,

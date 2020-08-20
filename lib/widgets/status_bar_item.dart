@@ -1,40 +1,78 @@
+import 'package:chatapp/pages/home/story_view_page.dart';
+import 'package:chatapp/services/friends_service.dart';
 import 'package:flutter/material.dart';
 
-class StatusBarItem extends StatefulWidget {
+class StatusBarItem extends StatefulWidget 
+{
   // the name of the user
-  final String name;
+  final String _id;
 
-  /// the image of the user
-  final AssetImage image;
-
-  /// story watched or not
-  bool watched;
-
-  StatusBarItem(this.name, this.image) {
-    watched = false;
-  }
+  StatusBarItem(this._id);
   @override
   _StatusBarItemState createState() => _StatusBarItemState();
 }
 
-class _StatusBarItemState extends State<StatusBarItem> {
+class _StatusBarItemState extends State<StatusBarItem> 
+{
+  String _imageRef;
+  String _username;
+  bool _watched = false;
+
+  @override
+  void initState()
+  {
+    super.initState();
+    init();
+  }
+
+  void init()
+  {
+    FriendsService.loadImage(widget._id).then((value)
+    {
+      setState(() {
+        _imageRef = value;
+      });
+    });
+    FriendsService.getUsernameForId(widget._id).then((value)
+    {
+      setState(() {
+        _username = value;
+      });
+    });
+  }
+
   /// get CircualarAvatar which contains the users profile image
-  Widget getCircularAvatar() {
-    return CircleAvatar(
-      radius: 22,
-      backgroundImage: widget.image,
+  Widget getCircularAvatar()
+  {
+    return GestureDetector(
+      onTap: () 
+      {
+        setState(() {
+          _watched = true;
+        });
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => StoryViewPage(widget._id, _username) 
+        ));
+      },
+      child: CircleAvatar(
+        radius: 22,
+        backgroundImage: _imageRef != null ? NetworkImage(
+          _imageRef
+        ) : AssetImage("assets/logo.png"),
+      ),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) 
+  {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal : 5),
       child: Container(
         width: 50,
         child: Column(
           children: <Widget>[
-            widget.watched ? getCircularAvatar()
+            _watched ? getCircularAvatar()
             : Container(
                 height: 48,
                 width: 48,
@@ -50,7 +88,7 @@ class _StatusBarItemState extends State<StatusBarItem> {
             Padding(
               padding: const EdgeInsets.only(top:2),
               child: Text(
-                widget.name,
+                _username != null ? _username : "",
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 12, 
