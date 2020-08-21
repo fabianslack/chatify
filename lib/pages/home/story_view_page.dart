@@ -22,17 +22,10 @@ class _StoryViewPageState extends State<StoryViewPage>
 
   bool _holding = false;
 
-  Timer _timer;
-
-  Stopwatch _stopwatch;
-
   @override
   void initState()
   {
     super.initState();
-    _stopwatch = Stopwatch();
-    _stopwatch.start();
-    _timer = Timer.periodic(Duration(milliseconds: 10), (timer) => checkTimer());
     init();
   }
 
@@ -46,18 +39,10 @@ class _StoryViewPageState extends State<StoryViewPage>
     });
   }
 
-  void checkTimer()
-  {
-    if(_stopwatch.elapsed > Duration(seconds: 5))
-    {
-      close();
-    }
-  }
+
 
   void close()
   {
-    _stopwatch.stop();
-    _timer.cancel();
     Navigator.of(context).pop();
   }
 
@@ -88,24 +73,24 @@ class _StoryViewPageState extends State<StoryViewPage>
                   children: [
                     Hero(
                       tag: 'storyimage' + widget._username,
-                      child: !_holding ? CircleAvatar(
+                      child: CircleAvatar(
                         radius: 15,
                         backgroundImage: _profileImage != null ?  
                           NetworkImage(_profileImage) : 
                           AssetImage("assets/logo.png"),
-                      )  : Container()
+                      )
                     ),
                     SizedBox(width: 10,),
                     Hero(
                       tag: 'story' + widget._username,
-                      child: !_holding ? Text(
+                      child: Text(
                         widget._username,
                         style: TextStyle(
                           fontSize: 18,
                           color: Colors.white,
                           fontWeight: FontWeight.w400
                         )
-                      ) : Text(""),
+                      )
                     ),
                   ],
                 ),
@@ -178,18 +163,20 @@ class _StoryViewPageState extends State<StoryViewPage>
         SizedBox(height: _paddingTop,),
         Expanded(
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical:4),
             width: double.infinity,
-            decoration: BoxDecoration(
-              color: Color(0xFF303030),
+            child:  ClipRRect(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
                 bottomLeft: Radius.circular(10),
                 bottomRight: Radius.circular(10)
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: FittedBox(
+                fit: BoxFit.fitWidth,
+                child: _imageRef != null ? Image.network(_imageRef) : Container(),
               )
-            ),
-            child:  _imageRef != null ? Image.network(_imageRef) : CircularProgressIndicator(),
+            )
           )
         ),
         SizedBox(height: 50,)
@@ -211,15 +198,13 @@ class _StoryViewPageState extends State<StoryViewPage>
           setState(() {
             _holding = true;
           });
-          _stopwatch.stop();
         },
         onLongPressEnd: (end) 
         {
           setState(() {
             _holding = false;
           });
-          _stopwatch.start();
-        },
+         },
         child: Stack(
           children: [
               getImage(),
