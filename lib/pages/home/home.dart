@@ -6,6 +6,7 @@ import 'package:chatapp/widgets/chat_preview.dart';
 import 'package:chatapp/widgets/status_bar_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget 
@@ -26,6 +27,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   AnimationController _animationController;
   Animation<Offset> _offset;
+
+  RefreshController refreshController = new RefreshController();
   
   FriendsService _friendsService;
   double _width;
@@ -231,20 +234,38 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget getBody()
   {
-    return Column(
-      children: <Widget>[
-        getStoryRow(),
-        getBorder(),
-        SizedBox(
-          height: 5,
+    return Scrollbar(
+      child: SmartRefresher(
+        onLoading: () {
+          setState(() {
+          });
+          refreshController.loadComplete();
+        },
+        onRefresh: () {
+          setState(() {});
+          refreshController.refreshCompleted();
+        },
+        header: WaterDropHeader(),
+      controller: refreshController,
+      child: SingleChildScrollView(
+        //physics: AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: <Widget>[
+            getStoryRow(),
+            getBorder(),
+            SizedBox(
+              height: 5,
+            ),
+            getChats(),
+            getLogoutButton(),
+            SlideTransition(
+              position: _offset,
+              child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,
+            ),
+          ],
         ),
-        getChats(),
-        getLogoutButton(),
-        SlideTransition(
-          position: _offset,
-          child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,
-        ),
-      ],
+      ),
+      )
     );
   }
   
