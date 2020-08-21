@@ -4,6 +4,7 @@ import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/chat_preview.dart';
 import 'package:chatapp/widgets/status_bar_item.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -28,7 +29,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   AnimationController _animationController;
   Animation<Offset> _offset;
 
-  RefreshController refreshController = new RefreshController();
+  var _stories;
   
   FriendsService _friendsService;
   double _width;
@@ -39,6 +40,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     super.initState();
     _friendsService = FriendsService();
     _auth = Auth();
+    loadStories();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds:100),
@@ -85,12 +87,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     }
   }
 
+  void loadStories()
+  {
+    setState(() {
+      _stories = _friendsService.getStories();
+    });
+  }
+
   Widget getStoryRow()
   {
     return Container(
       height: 80,
       child: FutureBuilder(
-        future: _friendsService.getStories(),
+        future: _stories,
         builder: (context, snapshot)
         {
           if(snapshot.hasData && !snapshot.hasError && snapshot.data.length > 0)
@@ -234,38 +243,45 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget getBody()
   {
-    return Scrollbar(
-      child: SmartRefresher(
-        onLoading: () {
-          setState(() {
-          });
-          refreshController.loadComplete();
-        },
-        onRefresh: () {
-          setState(() {});
-          refreshController.refreshCompleted();
-        },
-        header: WaterDropHeader(),
-      controller: refreshController,
-      child: SingleChildScrollView(
-        //physics: AlwaysScrollableScrollPhysics(),
-        child: Column(
-          children: <Widget>[
-            getStoryRow(),
-            getBorder(),
-            SizedBox(
-              height: 5,
-            ),
-            getChats(),
-            getLogoutButton(),
-            SlideTransition(
-              position: _offset,
-              child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,
-            ),
-          ],
+    return CustomScrollView(
+      physics: BouncingScrollPhysics(),
+      slivers: [
+        CupertinoSliverRefreshControl(
+          onRefresh: () 
+          {
+            loadStories();
+            return new Future<void>.delayed(Duration(seconds: 1));
+          } 
         ),
-      ),
-      )
+        SliverList(
+            
+          delegate: SliverChildBuilderDelegate(
+            (context, index)
+            {
+              return Container(
+                height: MediaQuery.of(context).size.height,
+                child: Column(
+                  children: <Widget>[
+                    getStoryRow(),
+                    getBorder(),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    getChats(),
+                    getLogoutButton(),
+                    SlideTransition(
+                      position: _offset,
+                      child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,
+                    ),
+                  ],
+                ),
+              );
+            },
+            childCount: 1
+          ),
+        ),
+        
+      ],
     );
   }
   
