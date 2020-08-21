@@ -1,9 +1,7 @@
-import 'dart:io';
+
 
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/themes/theme.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'home/home.dart';
 import 'profile_page.dart';
@@ -17,7 +15,6 @@ class RootPage extends StatefulWidget {
 class _RootPageState extends State<RootPage> with WidgetsBindingObserver
 {
   final PageController _controller = PageController();
-  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   //final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   int _selectedIndex = 0;
   List<Widget> _bodies;
@@ -39,49 +36,6 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver
     super.dispose();
     WidgetsBinding.instance.removeObserver(this);
   }
-
-/*
-  void init()
-  {
-    firebaseMessaging.requestNotificationPermissions();
-
-    firebaseMessaging.configure(
-    onMessage: (Map<String, dynamic> message) 
-    {
-      print('onMessage: $message');
-      if(Platform.isAndroid)
-      {
-        showNotification(message['notification'];
-      }
-      else
-      {
-        showNotification(message['aps']['alert']);
-      }
-    }, 
-    onResume: (Map<String, dynamic> message) 
-    {
-      print('onResume: $message');
-      return;
-    }, 
-    onLaunch: (Map<String, dynamic> message) 
-    {
-      print('onLaunch: $message');
-      return;
-    }
-    );
-
-    firebaseMessaging.getToken().then((token) 
-    {
-      print('token: $token');
-      Firestore.instance
-          .collection('users')
-          .document(Auth.getUserID())
-          .updateData({'pushToken': token});
-      }).catchError((err) {
-        
-    });
-  }
-  */
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

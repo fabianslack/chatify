@@ -45,6 +45,7 @@ class ChatImage extends StatelessWidget
                    padding: EdgeInsets.all(70.0),
                    decoration: BoxDecoration(
                      color: Colors.grey[200],
+
                      borderRadius: BorderRadius.all(
                        Radius.circular(8.0),
                      ),

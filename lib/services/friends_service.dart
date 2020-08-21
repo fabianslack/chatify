@@ -45,7 +45,7 @@ class FriendsService
 
   Future<bool> hasStory(String id) async
   {
-    return (await Firestore.instance.collection("users").document(id).get().then((value) => value["stories"]) !=  null);
+    return (await Firestore.instance.collection("users").document(id).get().then((value) => value["stories"].length > 0));
   }
 
   void addRequest(String friendID)

@@ -33,8 +33,9 @@ class _StatusBarItemState extends State<StatusBarItem>
         _imageRef = value;
       });
     });
-    FriendsService.getUsernameForId(widget._id).then((value)
-    {
+
+    FriendsService.getUsernameForId(widget._id).then((value) 
+    { 
       setState(() {
         _username = value;
       });
@@ -54,11 +55,14 @@ class _StatusBarItemState extends State<StatusBarItem>
           builder: (context) => StoryViewPage(widget._id, _username) 
         ));
       },
-      child: CircleAvatar(
-        radius: 22,
-        backgroundImage: _imageRef != null ? NetworkImage(
-          _imageRef
-        ) : AssetImage("assets/logo.png"),
+      child: Hero(
+        tag: _username != null ? 'storyimage' + _username : "",
+        child: CircleAvatar(
+          radius: 22,
+          backgroundImage: _imageRef != null ? NetworkImage(
+            _imageRef
+          ) : AssetImage("assets/logo.png"),
+        ),
       ),
     );
   }
@@ -87,14 +91,17 @@ class _StatusBarItemState extends State<StatusBarItem>
               ),
             Padding(
               padding: const EdgeInsets.only(top:2),
-              child: Text(
-                _username != null ? _username : "",
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12, 
-                  fontWeight: FontWeight.w600, 
-                  color: Colors.black
-                )
+              child: Hero(
+                tag: _username != null ? 'story' + _username : "",
+                child: Text(
+                  _username != null ?_username : "",
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12, 
+                    fontWeight: FontWeight.w600, 
+                    color: Colors.black
+                  )
+                ),
               ),
             )
           ],
