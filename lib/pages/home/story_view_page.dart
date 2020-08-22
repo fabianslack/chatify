@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:chatapp/services/friends_service.dart';
 import 'package:flutter/material.dart';
 
