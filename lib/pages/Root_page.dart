@@ -71,7 +71,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver
     return BottomNavigationBar(
       elevation: 0,
       onTap: (index) {
-        _controller.animateToPage(index, duration: Duration(milliseconds: 200), curve: Curves.easeIn);
+       _controller.jumpToPage(index);
       },
       currentIndex: _selectedIndex,
       type: BottomNavigationBarType.fixed,
