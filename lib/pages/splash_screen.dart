@@ -1,6 +1,11 @@
 
+import 'dart:async';
+import 'dart:io';
+
 import 'package:chatapp/services/authentication.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget 
@@ -12,9 +17,11 @@ class SplashScreen extends StatefulWidget
 class _SplashScreenState extends State<SplashScreen> 
 {
 
+  Auth _auth = Auth();
+
   void handleStartup() async
   {
-    Auth _auth = Auth();
+    
 
     FirebaseUser user = await _auth.getCurrentUser();
     print(user);
@@ -28,6 +35,7 @@ class _SplashScreenState extends State<SplashScreen>
       Navigator.of(context).pushReplacementNamed("welcome-page");
     }
   }
+
 
   @override 
   void initState()

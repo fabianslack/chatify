@@ -36,7 +36,7 @@ class _AddStoryWidgetState extends State<AddStoryWidget> {
       {
       },
       child: _pofileImageRef != null ? CircleAvatar(
-        radius: 25,
+        radius: 28,
         backgroundImage: NetworkImage(
           _pofileImageRef
         )

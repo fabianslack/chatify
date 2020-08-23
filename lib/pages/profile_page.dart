@@ -22,15 +22,38 @@ class _ProfilePageState extends State<ProfilePage>
 
   Widget getBody()
   {
-    return StreamBuilder(
-      stream: _service.getStream(),
-      builder: (context, snapshot) => snapshot.hasData ? ListView.builder(
-        itemCount: snapshot.data["requests"].length,
-        itemBuilder: (context, index) => RequestWidget(
-          AssetImage("assets/logo.png"),
-          snapshot.data["requests"][index]
+    return CustomScrollView(
+      physics: BouncingScrollPhysics(),
+      slivers: [
+        SliverAppBar(
+          expandedHeight: 200,
+          pinned: true,
+          flexibleSpace: FlexibleSpaceBar(
+            centerTitle: true,
+            title: Column(
+              children: [
+                CircleAvatar(
+                 backgroundImage: AssetImage("assets/logo.png"),
+                 radius: 10,
+                ),
+                Text("Fabian Slack"),
+              ]
+            )
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index)
+            {
+              return Container(
+                width: double.infinity,
+                height: 100,
+              );
+            },
+            childCount: 150
+          ),
         )
-      ) : Container(),
+      ],
     );
   }
 
@@ -38,6 +61,7 @@ class _ProfilePageState extends State<ProfilePage>
   Widget build(BuildContext context) 
   {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: getBody()
     );
   }

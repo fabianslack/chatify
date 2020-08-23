@@ -80,12 +80,9 @@ class _ChatPreviewState extends State<ChatPreview>
       width: 55,
       child: Stack(
         children: [
-          Hero(
-            child: CircleAvatar(
-              backgroundImage: _imageRef != null ? NetworkImage(_imageRef) : AssetImage("assets/logo.png"),
-              radius: 28,
-            ),
-            tag: 'image'+widget._username,
+          CircleAvatar(
+            backgroundImage: _imageRef != null ? NetworkImage(_imageRef) : AssetImage("assets/logo.png"),
+            radius: 28,
           ),
           _online ? Positioned(
             bottom: 0.0,
@@ -131,16 +128,13 @@ class _ChatPreviewState extends State<ChatPreview>
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-                Hero(
-                  tag: widget._username,
-                  child: Text(widget._username,
-                    overflow: TextOverflow.clip,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 18,
-                      color: Colors.black
-                    )
-                  ),
+                Text(widget._username,
+                  overflow: TextOverflow.clip,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    color: Colors.black
+                  )
                 ),
 
               Row(

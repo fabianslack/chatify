@@ -1,4 +1,6 @@
 import 'package:chatapp/pages/home/search_page.dart';
+import 'package:chatapp/pages/profile_page.dart';
+import 'package:chatapp/pages/usersettings_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
@@ -20,6 +22,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   Auth _auth;
 
   TextEditingController _controller = TextEditingController();
+  ScrollController _scrollController = ScrollController();
 
   var _stories;
   
@@ -61,6 +64,28 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     setState(() {
       _stories = _friendsService.getStories();
     });
+  }
+
+  void navigateToProfile()
+  {
+    Navigator.of(context).push(PageRouteBuilder(
+      pageBuilder: (context, animation, animation2) => ProfilePage(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child)
+      {
+        var begin = Offset(0.0, 1.0);
+        var end = Offset.zero;
+        var curve = Curves.ease;
+
+        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      }, 
+      transitionDuration: Duration(milliseconds: 400)
+      )
+    );
   }
 
   Widget getStoryRow()
@@ -243,7 +268,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   Widget appBar()
   {
     return AppBar(
-      elevation: 1,
+      elevation: 0,
       backgroundColor: Colors.white,
       centerTitle: true,
       title: Text(
@@ -260,10 +285,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
           color: Colors.grey[600],
           size: 30
         ),
-        onPressed: () 
-        {
-          
-        },
+        onPressed: () => navigateToProfile()
       ),
       actions: <Widget>[
         Padding(

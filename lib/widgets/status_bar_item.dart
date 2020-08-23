@@ -58,7 +58,7 @@ class _StatusBarItemState extends State<StatusBarItem>
       child: Hero(
         tag: _username != null ? 'storyimage' + _username : "",
         child: CircleAvatar(
-          radius: 25,
+          radius: 28,
           backgroundImage: _imageRef != null ? NetworkImage(
             _imageRef
           ) : AssetImage("assets/logo.png"),
@@ -78,8 +78,8 @@ class _StatusBarItemState extends State<StatusBarItem>
           children: <Widget>[
             _watched ? getCircularAvatar()
             : Container(
-                height: 50,
-                width: 50,
+                height: 58,
+                width: 58,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(

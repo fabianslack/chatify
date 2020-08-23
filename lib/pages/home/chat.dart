@@ -167,23 +167,19 @@ class _ChatPageState extends State<ChatPage>
                 )
             );
             },
-            child: Hero(tag: 'image'+widget._name, child: CircleAvatar(
+            child: CircleAvatar(
               backgroundImage: widget._imageRef != null ? NetworkImage(widget._imageRef) : AssetImage("assets/logo.png")
               )
-            )
           ),
           SizedBox(width: 10,),
           _online ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Hero(
-                tag: widget._name,
-                child: Text(
-                widget._name,
-                style: TextStyle(
-                  fontSize: 22,
-                  color: Colors.black
-                  ),
+              Text(
+              widget._name,
+              style: TextStyle(
+                fontSize: 22,
+                color: Colors.black
                 ),
               ),
               Text(
