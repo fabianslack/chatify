@@ -3,36 +3,36 @@ import 'package:chatapp/themes/theme.dart';
 import 'package:chatapp/widgets/recent_search_widget.dart';
 import 'package:chatapp/widgets/search_user_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchPage extends StatefulWidget 
 {
-  bool _searching;
-  String _query;
-  SharedPreferences _preferences;
-  SearchPage(this._searching, this._query, this._preferences);
   @override
   _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> 
+class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin
 {
   SearchService _searchService = SearchService();
+  TextEditingController _controller = TextEditingController();
 
   List<String> _recentID = List();
 
   double _height;
   double _width;
 
+  String _query;
+
   bool _dataLoaded = false;
 
   Map<String, String> _searchResult = Map();
 
+
+
   void loadResults() async
   {
-    if(widget._query.length > 0)
+    if(_query.length > 0)
     {
-      _searchResult = await _searchService.getSuggestionsUsers(widget._query);
+      _searchResult = await _searchService.getSuggestionsUsers(_query);
       setState(() {
         _dataLoaded = true;
       });
@@ -52,6 +52,7 @@ class _SearchPageState extends State<SearchPage>
      });
     return widgets;
   }
+
 
   Widget getPreviewScreen()
   {
@@ -119,11 +120,88 @@ class _SearchPageState extends State<SearchPage>
   }
 
   
+  Widget getSearchBar()
+  {
+    return PreferredSize(
+      preferredSize: Size.fromHeight(100),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 10),
+        child: Row(
+          children: [
+             Container(
+               padding: const EdgeInsets.only(left: 5),
+               width: MediaQuery.of(context).size.width *0.8,
+               height: 35,
+               decoration: BoxDecoration(
+                 color: Colors.grey[200],
+                 borderRadius: BorderRadius.circular(10)
+               ),
+               child: Row(
+                 children: [
+                   Icon(
+                     Icons.search,
+                     size: 25,
+                     color: Colors.grey[400],
+                   ),
+                   SizedBox(width: 2,),
+                   Expanded(
+                     child: TextField(
+                       autofocus: true,
+                       controller: _controller,
+                       style: TextStyle(
+                         color: Colors.black,
+                       ),
+                       decoration: InputDecoration(
+                         isDense: true,
+                         border: InputBorder.none,
+                         focusedBorder: InputBorder.none,
+                         enabledBorder: InputBorder.none,
+                         errorBorder: InputBorder.none,
+                         disabledBorder: InputBorder.none,
+                         hintText: "Search",
+                         hintStyle: TextStyle(
+                           color: Colors.grey[600],
+                           fontSize: 18
+                         ),
+                       ),
+                       onChanged: (value)
+                       {
+                         setState(() {
+                           _query = value;
+                         });
+                       }      
+                     ),
+                   )
+                 ],
+               ),
+            ),
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Text(
+                "Close",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18
+                )
+              )
+            )
+          ]
+        ),
+      ),
+    );
+  }
+
+  Widget getBody()
+  {
+    return Column(
+
+    );
+  }
 
   Widget getSearchView()
   {
     return Container(
-      height: _height,
+      height: _height*0.8,
       width: _width,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -145,9 +223,11 @@ class _SearchPageState extends State<SearchPage>
   {
     _height = MediaQuery.of(context).size.height;
     _width = MediaQuery.of(context).size.width;
-    loadResults();
-    _recentID = widget._preferences.getStringList("recentSearches");
-    return widget._searching ? getSearchView() : getPreviewScreen();
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: getSearchBar(),
+      //body: getBody(),
+    );
     
   }
 }

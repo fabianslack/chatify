@@ -5,6 +5,7 @@ import 'package:chatapp/pages/home/chat.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ChatPreview extends StatefulWidget 
@@ -27,11 +28,6 @@ class _ChatPreviewState extends State<ChatPreview>
 
   bool _online;
   String _imageRef;
-  double _flex = 100;
-  double _secondFlex = 100;
-
-  bool _swipeRight = false;
-  bool _swipeLeft = false;
 
   @override
   void initState() 
@@ -72,9 +68,50 @@ class _ChatPreviewState extends State<ChatPreview>
 
   void handleTap() 
   {
-    Navigator.of(context).push(MaterialPageRoute(
+    Navigator.of(context).push(CupertinoPageRoute(
       builder: (context) => ChatPage(widget._username, _imageRef, widget._id),
     ));
+  }
+
+  Widget getImage()
+  {
+    return Container(
+      height: 55,
+      width: 55,
+      child: Stack(
+        children: [
+          Hero(
+            child: CircleAvatar(
+              backgroundImage: _imageRef != null ? NetworkImage(_imageRef) : AssetImage("assets/logo.png"),
+              radius: 28,
+            ),
+            tag: 'image'+widget._username,
+          ),
+          _online ? Positioned(
+            bottom: 0.0,
+            right: 0.0,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white
+              ),
+              child: Center(
+                child: Container(
+                  height: 10,
+                  width: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.green
+                  )
+                ),
+              ),
+            )
+          ) : Container()
+        ],
+      ),
+    );
   }
 
   Widget getContent()
@@ -85,86 +122,60 @@ class _ChatPreviewState extends State<ChatPreview>
     String _time = time.hour.toString() + ":" + (time.minute.toString().length > 1 ? time.minute.toString() : "0" + time.minute.toString());
     return Row(
       children: <Widget>[
-        Stack(
-          children: [
-            Hero(
-              child: CircleAvatar(
-                backgroundImage: _imageRef != null ? NetworkImage(_imageRef) : AssetImage("assets/logo.png"),
-                radius: 24,
-              ),
-              tag: 'image'+widget._username,
-            ),
-            Positioned(
-              bottom: 0.0,
-              right: 0.0,
-              child: Container(
-                height: 15,
-                width: 15,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _online ? Colors.green : Colors.red
-                )
-              )
-            )
-          ],
-        ),
+        getImage(),
         SizedBox(
           width: 10,
         ),
         Expanded(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+                Hero(
+                  tag: widget._username,
+                  child: Text(widget._username,
+                    overflow: TextOverflow.clip,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                      color: Colors.black
+                    )
+                  ),
+                ),
+
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Hero(
-                    tag: widget._username,
-                    child: Text(widget._username,
-                      overflow: TextOverflow.clip,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16,
-                        color: Colors.black
-                      )
+                  Text(
+                    widget._message ? widget._ref["content"] : "",
+                    overflow: TextOverflow.ellipsis,
+                    style:  TextStyle(
+                      fontSize: 16, 
+                      color: Colors.grey
+                    )
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Container(
+                      height: 2,
+                      width: 2,
+                      decoration: BoxDecoration(
+                        color: Colors.grey,
+                        shape: BoxShape.circle
+                      ),
                     ),
                   ),
                   Text(
                     _time,
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                      color: Colors.grey[600]
+                      fontSize: 14,
+                      color: Colors.grey
                     ),
                   ),
-                ]
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      widget._message ? widget._ref["content"] : "",
-                      overflow: TextOverflow.ellipsis,
-                      style:  TextStyle(
-                        fontSize: 14, 
-                        color: Colors.grey
-                      )
-                    ),
-                  ),
-                  widget._message && !widget._ref["received"] && widget._ref["from"] != Auth.getUserID()
-                  ? Container(
-                    height: 15,
-                    width: 15,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle, color: Colors.blue
-                    ),
-                  )
-                  : Container()
                 ]
               )
             ],
-          )
+          ),
         ),
       ],
     );
@@ -175,109 +186,11 @@ class _ChatPreviewState extends State<ChatPreview>
   {
 
     return GestureDetector(
-      onHorizontalDragUpdate: (drag) 
-      {
-        setState(() {
-          print(_secondFlex.toString() + "   " + _flex.toString());
-          if(drag.primaryDelta > 0) // rechts
-          {
-            _secondFlex -= drag.primaryDelta;
-            _swipeRight = true;
-          }
-          
-          else if(drag.primaryDelta < 0) // links
-          {
-            _flex += drag.primaryDelta;
-            _swipeLeft = true;
-          }
-
-          if(_swipeRight && drag.primaryDelta < 0)
-          {
-            _secondFlex -= drag.primaryDelta;
-            _flex = 100;
-            if(_secondFlex > 130)
-            {
-              _swipeRight = false;
-            }
-          }
-
-          if(_swipeLeft && drag.primaryDelta > 0)
-          {
-            _flex += drag.primaryDelta;
-            _secondFlex = 100;
-            if(_flex > 130)
-            {
-              _swipeLeft = false;
-            }
-          }
-          
-          if(_flex < 80)
-          {
-            _flex = 80;
-
-          }
-
-          if(_secondFlex < 80)
-          {
-            _secondFlex = 80;
-          }
-          
-       });
-      },
-      child: Row(
-        children: [
-          Expanded(
-            flex: 100 - _secondFlex.toInt(),
-            child: SizedBox(
-              width: 0.0,
-              height: 60,
-              child: FlatButton(
-                color: Colors.red,
-                child: FittedBox(
-                  child: Text(
-                    "Left",
-                    style: TextStyle(
-                      color: Colors.black
-                    )
-                  ),
-                ),
-              onPressed: () {},
-              ),
-            ),
-          ),
-          Expanded(
-            flex: _flex.toInt(),
-            child: GestureDetector(
-              onTap: () => handleTap(),
-              child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 7),
-              height: 45,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: getContent()
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 100 - _flex.toInt(),
-            child: SizedBox(
-              width: 0.0,
-              height: 60,
-              child: FlatButton(
-                color: Colors.grey[200],
-                child: FittedBox(
-                  child: Text(
-                    "Right",
-                    style: TextStyle(
-                      color: Colors.black
-                    )
-                  ),
-                ),
-              onPressed: () {},
-              ),
-            ),
-          ),
-        ],
-      ),
+      onTap: () => handleTap(),
+      child: Container(
+        height: 75,
+        child: getContent()
+        ),
     );
   }
 }

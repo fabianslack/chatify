@@ -2,13 +2,12 @@ import 'package:chatapp/pages/home/search_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
+import 'package:chatapp/widgets/add_story_widget.dart';
 import 'package:chatapp/widgets/chat_preview.dart';
 import 'package:chatapp/widgets/status_bar_item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget 
 {
@@ -18,21 +17,13 @@ class Home extends StatefulWidget
 
 class _HomeState extends State<Home> with TickerProviderStateMixin
 {
-  TextEditingController _controller = TextEditingController();
-  SharedPreferences _preferences;
   Auth _auth;
 
-  bool _searchPressed = false;
-  bool _searching = false;
-  bool _firstClick = false;
-
-  AnimationController _animationController;
-  Animation<Offset> _offset;
+  TextEditingController _controller = TextEditingController();
 
   var _stories;
   
   FriendsService _friendsService;
-  double _width;
 
   @override
   void initState()
@@ -41,20 +32,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     _friendsService = FriendsService();
     _auth = Auth();
     loadStories();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds:100),
-      animationBehavior: AnimationBehavior.preserve
-    );
 
-    _offset = Tween<Offset>(end: Offset(
-      0, 0
-    ), begin: Offset(0, 1)).animate(_animationController);
-  }
-
-  Future<void> loadChats() async
-  {
-    _preferences = await SharedPreferences.getInstance();
   }
 
   void handleLogOut() async
@@ -63,15 +41,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     await _auth.signOut();
     FocusScope.of(context).unfocus();
     Navigator.pushReplacementNamed(context, 'welcome-page');
-  }
-
-  void handleSearch(String value) async
-  {
-    setState(() 
-    {
-      _searching = value.length > 0;
-    });
-                  
   }
 
   String getChatRoomId(String id)
@@ -107,12 +76,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
             
             return ListView.builder(
               physics: BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal:10),
               scrollDirection: Axis.horizontal,
               itemCount: snapshot.data.length,
               itemBuilder: (context, index)
               {
-                print(snapshot.data[index]);
+                if(index == 0)
+                {
+                  return Row(
+                    children: [
+                       AddStoryWidget(),
+                      StatusBarItem(snapshot.data[index])
+                    ],
+                  );
+                }
                 return StatusBarItem(snapshot.data[index]);
               } 
             );
@@ -123,76 +99,58 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     );
   }
 
-  Widget getBorder()
-  {
-    return Container(
-      width: double.infinity,
-      height: 1,
-      color: Colors.grey[200],
-    );
-  }
-
   Widget getSearchBar()
   {
-    
-    return PreferredSize(
-      preferredSize: Size.fromHeight(100),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 35, 10, 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [ 
-            Container(
-              width: _width*0.8,
-              height: 32,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                color: Colors.grey[200]
+    return Container(
+      padding: const EdgeInsets.only(left: 5),
+      width: MediaQuery.of(context).size.width - 30,
+      height: 35,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(10)
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.search,
+            size: 25,
+            color: Colors.grey[400],
+          ),
+          SizedBox(width: 2,),
+          Expanded(
+            child: TextField(
+              readOnly: true,
+              style: TextStyle(
+                color: Colors.black,
               ),
-              child: TextField(
-                autofocus: true,
-                onChanged: handleSearch,
-                controller: _controller,
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 20
+              decoration: InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                hintText: "Search",
+                hintStyle: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 18
                 ),
-                decoration: InputDecoration(
-                  
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: Colors.grey[900],
-                    size:30),
-                  focusedBorder: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  errorBorder: InputBorder.none,
-                  disabledBorder: InputBorder.none,
-                ),
-              ),  
-            ),
-            GestureDetector(
-              child: Text(
-                "Close",
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold
-                )
               ),
               onTap: ()
               {
-                setState(() 
-                {
-                  _searchPressed = !_searchPressed;
-                  _animationController.reverse();
-                });
-                loadChats();
-                _controller.clear();
-                FocusScope.of(context).unfocus();
+                Navigator.of(context).push(PageRouteBuilder(
+                  pageBuilder: (c, a1, a2) => SearchPage(),
+                  transitionsBuilder: (c, anim1, a2, child) => FadeTransition(
+                    opacity: anim1, 
+                    child: child,
+                  ),
+                  transitionDuration: Duration(milliseconds: 500),
+                )); 
               },
-            )
-          ]
-        ),
+             
+            ),
+          )
+        ],
       ),
     );
   }
@@ -201,7 +159,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   {
     return StreamBuilder(
       stream: _friendsService.getStream(),
-      builder: (context, snapshot) => snapshot.data != null ? ListView.separated(
+      builder: (context, snapshot) => snapshot.data != null ? ListView.builder(
         shrinkWrap: true,
         physics: BouncingScrollPhysics(),
         itemCount: snapshot.data["friends"].length,
@@ -226,17 +184,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
             );
           } 
         ),
-        separatorBuilder: (context, index)
-        {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(65, 0, 10, 0),
-            child: Container(
-              height: 1,
-              width: double.infinity,
-              color: Colors.grey[200],
-            ),
-          );
-        },
       ) : Container(),
     );
   }
@@ -260,19 +207,18 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
             {
               return Container(
                 height: MediaQuery.of(context).size.height,
+                padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
                 child: Column(
                   children: <Widget>[
+                    SizedBox(height: 10),
+                    getSearchBar(),
+                    SizedBox(height: 20,),
                     getStoryRow(),
-                    getBorder(),
                     SizedBox(
-                      height: 5,
+                      height: 15,
                     ),
                     getChats(),
                     getLogoutButton(),
-                    SlideTransition(
-                      position: _offset,
-                      child: _firstClick ? SearchPage(_searching, _controller.text.trim(), _preferences) : null,
-                    ),
                   ],
                 ),
               );
@@ -297,20 +243,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   Widget appBar()
   {
     return AppBar(
-      elevation: 0,
+      elevation: 1,
       backgroundColor: Colors.white,
       centerTitle: true,
       title: Text(
-        "Messages",
+        "Chats",
         style: TextStyle(
           color: Colors.black,
           fontSize: 22,
-          fontWeight: FontWeight.w700
+          fontWeight: FontWeight.bold
         )
       ),
       leading: IconButton(
         icon: Icon(
-          Icons.add,
+          Icons.supervised_user_circle,
           color: Colors.grey[600],
           size: 30
         ),
@@ -320,23 +266,29 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
         },
       ),
       actions: <Widget>[
-        IconButton(
-          icon: Icon(
-            Icons.search,
-            color: Colors.grey[600],
-            size: 30
+        Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: Container(
+            height: 40,
+            width: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.grey[200]
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.add_circle_outline,
+                color: Colors.grey,
+                size: 25
+              ),
+              onPressed: () 
+              {
+              },
+            ),
           ),
-          onPressed: () 
-          {
-            setState(() {
-              _searchPressed = true;
-              _searching = false;
-              _firstClick = true;
-              _animationController.forward();
-            });
-          },
         )
       ],
+     
     );
   }
   
@@ -344,10 +296,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) 
   {
-    _width = MediaQuery.of(context).size.width;
-    loadChats();
     return Scaffold(
-      appBar: !_searchPressed ? appBar() : getSearchBar(),
+      appBar: appBar(),
       body: getBody(),
       backgroundColor: Colors.white,
     );
