@@ -54,8 +54,8 @@ class _AddStoryWidgetState extends State<AddStoryWidget> {
         child: Column(
           children: <Widget>[
             Container(
-              height: 55,
-              width: 55,
+              height: 56,
+              width: 56,
               child: Stack(
                 children: [
                   getProfileImage(),
@@ -79,6 +79,7 @@ class _AddStoryWidgetState extends State<AddStoryWidget> {
                 ],
               ),
             ),
+            SizedBox(height: 7,),
             Text(
               "Add story",
               overflow: TextOverflow.ellipsis,

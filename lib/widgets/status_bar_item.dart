@@ -55,14 +55,11 @@ class _StatusBarItemState extends State<StatusBarItem>
           builder: (context) => StoryViewPage(widget._id, _username) 
         ));
       },
-      child: Hero(
-        tag: _username != null ? 'storyimage' + _username : "",
-        child: CircleAvatar(
-          radius: 28,
-          backgroundImage: _imageRef != null ? NetworkImage(
-            _imageRef
-          ) : AssetImage("assets/logo.png"),
-        ),
+      child: CircleAvatar(
+        radius: 28,
+        backgroundImage: _imageRef != null ? NetworkImage(
+          _imageRef
+        ) : AssetImage("assets/logo.png"),
       ),
     );
   }
@@ -73,13 +70,13 @@ class _StatusBarItemState extends State<StatusBarItem>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal : 5),
       child: Container(
-        width: 55,
+        width: 65,
         child: Column(
           children: <Widget>[
             _watched ? getCircularAvatar()
             : Container(
-                height: 58,
-                width: 58,
+                height: 56,
+                width: 56,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -87,21 +84,28 @@ class _StatusBarItemState extends State<StatusBarItem>
                     width: 2
                   )
                 ),
-                child: getCircularAvatar()
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 3
+                    )
+                  ),
+                  child: getCircularAvatar()
+                )
               ),
             Padding(
-              padding: const EdgeInsets.only(top:5),
-              child: Hero(
-                tag: _username != null ? 'story' + _username : "",
-                child: Text(
-                  _username != null ?_username : "",
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14, 
-                    fontWeight: FontWeight.w600, 
-                    color: Colors.black
-                  )
-                ),
+              padding: const EdgeInsets.only(top:7),
+              child: Text(
+                _username != null ?_username : "",
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14, 
+                  fontWeight: FontWeight.w600, 
+                  color: Colors.black
+                )
               ),
             )
           ],

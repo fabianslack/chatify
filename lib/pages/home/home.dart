@@ -1,6 +1,4 @@
-import 'package:chatapp/pages/home/search_page.dart';
 import 'package:chatapp/pages/profile_page.dart';
-import 'package:chatapp/pages/usersettings_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
@@ -21,14 +19,14 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 {
   Auth _auth;
 
-  TextEditingController _controller = TextEditingController();
-  ScrollController _scrollController = ScrollController();
-
   bool _searchPressed = false;
 
   var _stories;
   
   FriendsService _friendsService;
+  TextEditingController _textController = TextEditingController();
+
+  int _animationDuration = 250;
 
   @override
   void initState()
@@ -129,16 +127,16 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   Widget getSearchBar()
   {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           AnimatedContainer(
             alignment: Alignment.centerLeft,
             curve: Curves.linear,
-            duration: Duration(milliseconds: 400),
+            duration: Duration(milliseconds: _animationDuration),
             padding: EdgeInsets.only(left: 5),
-            width: _searchPressed ? MediaQuery.of(context).size.width * 0.8: MediaQuery.of(context).size.width - 30,
+            width: _searchPressed ? MediaQuery.of(context).size.width * 0.8: MediaQuery.of(context).size.width-20,
             height: 35,
             decoration: BoxDecoration(
               color: Colors.grey[200],
@@ -157,6 +155,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                     style: TextStyle(
                       color: Colors.black,
                     ),
+                    controller: _textController,
                     decoration: InputDecoration(
                       isDense: true,
                       border: InputBorder.none,
@@ -173,32 +172,41 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                     onTap: ()
                     {
                       setState(() {
-                        _searchPressed = !_searchPressed;
+                        _searchPressed = true;
                       });
                     },
-                  
                   ),
                 )
               ],
             ),
           ),
           AnimatedSize(
-            duration: Duration(milliseconds: 400),
+            duration: Duration(milliseconds: _animationDuration),
             vsync: this,
-            child: Container(
-              height: _searchPressed ? 20 : 0,
-              child: _searchPressed ? Text(
-              "Close",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w900,
-                fontSize: 20
-                ),
-              ) : Container(),
+            child: GestureDetector(
+              onTap: ()
+              {
+                setState(() {
+                  _searchPressed = !_searchPressed;
+                });
+                FocusScope.of(context).unfocus();
+                _textController.clear();
+              },
+              child: Container(
+                height: _searchPressed ? 20 : 0,
+                child: _searchPressed ? Text(
+                "Close",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20
+                  ),
+                ) : Container(),
+              ),
             )
           )
         ],
-      ) 
+      ),
     );
   }
 
@@ -254,7 +262,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
             {
               return Container(
                 height: MediaQuery.of(context).size.height,
-                padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
                 child: Column(
                   children: <Widget>[
                     SizedBox(height: 20,),
@@ -288,12 +296,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   Widget appBar()
   {
     return PreferredSize(
-      preferredSize: Size.fromHeight(180),
+      preferredSize: Size.fromHeight(105),
       child: Column(
         children: [
           AnimatedContainer(
-            height: _searchPressed ? 0 : 100,
-            duration: Duration(milliseconds: 400),
+            height: _searchPressed ? 0 : 85,
+            duration: Duration(milliseconds: _animationDuration),
             child: AppBar(
               elevation: 0,
               backgroundColor: Colors.white,
@@ -339,6 +347,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
               ],
             ),
           ),
+          AnimatedContainer(duration: Duration(milliseconds: _animationDuration), height: _searchPressed ? 40 : 0,),
           getSearchBar()
         ],
       )

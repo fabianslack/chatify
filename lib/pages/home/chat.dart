@@ -133,9 +133,6 @@ class _ChatPageState extends State<ChatPage>
     _service.likeMessage(timestamp, liked);
   }
 
- 
-  
-
   Widget getAppBar()
   {
     return AppBar(
@@ -221,135 +218,203 @@ class _ChatPageState extends State<ChatPage>
     );
   }
 
-  Widget getBottomBody()
+  Widget getTextField()
   {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      width: _width,
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey[200],
-            width: 2
-          )
-        ),
-        color: Colors.white,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: <Widget>[
-          Container(
-            decoration: ShapeDecoration(
-              color: Colors.grey[200],
-              shape: CircleBorder()
+    return Flexible(
+      child: Container(
+        padding: EdgeInsets.only(left: 10),
+        child: TextField(
+          keyboardType: TextInputType.multiline,
+          maxLines: null,
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 22
+          ),
+          controller: _controller,
+          decoration: InputDecoration(
+            isDense: true,
+            focusedBorder: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            errorBorder: InputBorder.none,
+            disabledBorder: InputBorder.none,
+            hintText: 'Chat ...',
+            hintStyle: TextStyle(
+              color: Colors.black,
+              fontSize: 22
             ),
-            child: IconButton(
-              iconSize: 25,
-              icon: Icon(
-                Icons.add,
-                color: Colors.grey[600],
-              ),
-              onPressed: () 
-              {
-                getImage();
-              },
-            ),
-          ), 
-          Container(
-            padding: const EdgeInsets.only(left: 10),
-            width:  _width*0.7,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: TextField(
-              //keyboardType: TextInputType.multiline,
-              //maxLines: null,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 16
-              ),
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: "Chat...",
-                hintStyle: TextStyle(
-                  color: Colors.grey[600]
-                ),
-                focusedBorder: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                errorBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
-                suffixIcon: !_textContainsText ? IconButton(
-                  iconSize: 25,
-                  icon: Icon(
-                    Icons.mic,
-                    color: Colors.grey[600],
+            suffixIcon: !_textContainsText ? Container() : GestureDetector(
+              onTap: () => onSendClicked(),
+              child: Container(
+                height: 30,
+                width: 55,
+                padding: const EdgeInsets.only(right: 10),
+                child: Center(
+                  child: Text(
+                    "Send",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20
+                    ),
                   ),
-                  onPressed: (){},
-                ) : null
+                ),
               ),
-              onChanged: (value)
-              {
-                setState(()
-                {
-                  value.length > 0 ? _textContainsText = true : _textContainsText = false;
-                });
-              },
-            ),
-          ), 
-          Container(
-            decoration: ShapeDecoration(
-              color: _textContainsText ? Colors.blueAccent : Colors.grey[200],
-              shape: CircleBorder()
-            ),
-            child: _textContainsText ? IconButton(
-              iconSize: 24,
-              icon: Icon(
-                Icons.send,
-                color: Colors.white,
-              ),
-              onPressed: onSendClicked,
-            ) : 
-            IconButton(
-              onPressed: () {},
-              iconSize: 25,  
-              icon: Icon(Icons.gif),
-              color: Colors.grey[600],
-            ) 
-          )
-        ]
+            )
+          ),
+          onChanged: (value)
+          {
+            setState(()
+            {
+              value.length > 0 ? _textContainsText = true : _textContainsText = false;
+            });
+          },
+        ),
       ),
     );
+  }
+
+  Widget getCameraIcon()
+  {
+    return !_textContainsText ? Container(
+      width: 40,
+      child: IconButton(
+        onPressed: () {},
+        icon: Icon(
+          Icons.camera_alt,
+          size: 27,
+          color: Colors.grey[700],
+        ),
+      ),
+    ) : Container();
+  }
+
+  Widget getShareButton()
+  {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(3, 2, 0, 2),
+      child: Container(
+        width: 37,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [
+              Colors.lightBlue[300], Colors.blue[600]
+            ]
+          )
+        ),
+        child: Center(
+          child: GestureDetector(
+            onTap: () {},
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 32,
+            ),
+          ),
+          
+        ),
+      ),
+    );
+  }
+
+  Widget getAudioButton()
+  {
+    return !_textContainsText ? GestureDetector(
+      onTap: () {},
+      child: Icon(
+        Icons.mic,
+        color: Colors.grey[700],
+        size: 27,
+      ),
+    ) : Container();
+  }
+
+  Widget getBottomBody()
+  {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(5, 0, 10, 5),
+      child: Container(
+        height: 50,
+        width: double.infinity,
+        child: Row(
+          children: [
+            getShareButton(),
+            SizedBox(width: 5,),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      color: Colors.grey[200]
+                  ),
+                  borderRadius: BorderRadius.circular(30)
+                ),
+                height: 42,
+                child: Row(
+                  children: [
+                      getTextField(),
+                      getAudioButton(),
+                      getCameraIcon()
+                  ],
+                ) ,
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+    return Container(
+     padding:  EdgeInsets.fromLTRB(5, 5, (_textContainsText ? 5 : 0), 5),
+     width: _width,
+     height: 55,
+     decoration: BoxDecoration(
+       border: Border(
+         top: BorderSide(
+           color: Colors.grey[200],
+           width: 1
+         )
+       ),
+       color: Colors.white,
+     ),
+     child: Row(
+       children: <Widget>[
+         getShareButton(),
+         getTextField(),
+         getAudioButton(),
+         getCameraIcon()
+       ]
+     ),
+      );
   }
 
   Widget getChatColumn()
   {
     return Expanded(
-          child: StreamBuilder(
-          stream: _service.getStream(),
-          builder: (context, snapshot) => snapshot.data != null ? ListView.builder(
-            controller: _scrollController,
-            reverse: true,
-            physics: BouncingScrollPhysics(),
-            itemCount: snapshot.data.documents.length,
-            itemBuilder: (context, index) 
-            {
-              var ref = snapshot.data.documents[index];
-              if(ref['from'] != Auth.getUserID())
-              {
-                _service.setRead(ref['timestamp']);
-              }
-              if(ref['type'] == 0)
-              {
-                return ChatMessage(ref, onMessageDoubleTap);
-              }
-              else if(ref['type'] == 1)
-              {
-                return ChatImage(ref);
-              }
-              return Container();
-            }
-          ) : Container(),
+      child: StreamBuilder(
+      stream: _service.getStream(),
+      builder: (context, snapshot) => snapshot.data != null ? ListView.builder(
+        controller: _scrollController,
+        reverse: true,
+        physics: BouncingScrollPhysics(),
+        itemCount: snapshot.data.documents.length,
+        itemBuilder: (context, index) 
+        {
+          var ref = snapshot.data.documents[index];
+          if(ref['from'] != Auth.getUserID())
+          {
+            _service.setRead(ref['timestamp']);
+          }
+          if(ref['type'] == 0)
+          {
+            return ChatMessage(ref, onMessageDoubleTap);
+          }
+          else if(ref['type'] == 1)
+          {
+            return ChatImage(ref);
+          }
+          return Container();
+        }
+      ) : Container(),
         
       ),
     );
