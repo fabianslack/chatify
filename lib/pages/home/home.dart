@@ -24,6 +24,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
 
+  bool _searchPressed = false;
+
   var _stories;
   
   FriendsService _friendsService;
@@ -126,57 +128,77 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget getSearchBar()
   {
-    return Container(
-      padding: const EdgeInsets.only(left: 5),
-      width: MediaQuery.of(context).size.width - 30,
-      height: 35,
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(10)
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Icon(
-            Icons.search,
-            size: 25,
-            color: Colors.grey[400],
+          AnimatedContainer(
+            alignment: Alignment.centerLeft,
+            curve: Curves.linear,
+            duration: Duration(milliseconds: 400),
+            padding: EdgeInsets.only(left: 5),
+            width: _searchPressed ? MediaQuery.of(context).size.width * 0.8: MediaQuery.of(context).size.width - 30,
+            height: 35,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(10)
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.search,
+                  size: 25,
+                  color: Colors.grey[400],
+                ),
+                SizedBox(width: 2,),
+                Expanded(
+                  child: TextField(
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      hintText: "Search",
+                      hintStyle: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 18
+                      ),
+                    ),
+                    onTap: ()
+                    {
+                      setState(() {
+                        _searchPressed = !_searchPressed;
+                      });
+                    },
+                  
+                  ),
+                )
+              ],
+            ),
           ),
-          SizedBox(width: 2,),
-          Expanded(
-            child: TextField(
-              readOnly: true,
+          AnimatedSize(
+            duration: Duration(milliseconds: 400),
+            vsync: this,
+            child: Container(
+              height: _searchPressed ? 20 : 0,
+              child: _searchPressed ? Text(
+              "Close",
               style: TextStyle(
                 color: Colors.black,
-              ),
-              decoration: InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                errorBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
-                hintText: "Search",
-                hintStyle: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 18
+                fontWeight: FontWeight.w900,
+                fontSize: 20
                 ),
-              ),
-              onTap: ()
-              {
-                Navigator.of(context).push(PageRouteBuilder(
-                  pageBuilder: (c, a1, a2) => SearchPage(),
-                  transitionsBuilder: (c, anim1, a2, child) => FadeTransition(
-                    opacity: anim1, 
-                    child: child,
-                  ),
-                  transitionDuration: Duration(milliseconds: 500),
-                )); 
-              },
-             
-            ),
+              ) : Container(),
+            )
           )
         ],
-      ),
+      ) 
     );
   }
 
@@ -235,8 +257,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                 padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
                 child: Column(
                   children: <Widget>[
-                    SizedBox(height: 10),
-                    getSearchBar(),
                     SizedBox(height: 20,),
                     getStoryRow(),
                     SizedBox(
@@ -267,50 +287,61 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget appBar()
   {
-    return AppBar(
-      elevation: 0,
-      backgroundColor: Colors.white,
-      centerTitle: true,
-      title: Text(
-        "Chats",
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 22,
-          fontWeight: FontWeight.bold
-        )
-      ),
-      leading: IconButton(
-        icon: Icon(
-          Icons.supervised_user_circle,
-          color: Colors.grey[600],
-          size: 30
-        ),
-        onPressed: () => navigateToProfile()
-      ),
-      actions: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(right: 10),
-          child: Container(
-            height: 40,
-            width: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey[200]
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.add_circle_outline,
-                color: Colors.grey,
-                size: 25
+    return PreferredSize(
+      preferredSize: Size.fromHeight(180),
+      child: Column(
+        children: [
+          AnimatedContainer(
+            height: _searchPressed ? 0 : 100,
+            duration: Duration(milliseconds: 400),
+            child: AppBar(
+              elevation: 0,
+              backgroundColor: Colors.white,
+              centerTitle: true,
+              title: Text(
+                "Chats",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold
+                )
               ),
-              onPressed: () 
-              {
-              },
+              leading: IconButton(
+                icon: Icon(
+                  Icons.supervised_user_circle,
+                  color: Colors.grey[600],
+                  size: 30
+                ),
+                onPressed: () => navigateToProfile()
+              ),
+              actions: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Container(
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey[200]
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.add_circle_outline,
+                        color: Colors.grey,
+                        size: 25
+                      ),
+                      onPressed: () 
+                      {
+                      },
+                    ),
+                  ),
+                )
+              ],
             ),
           ),
-        )
-      ],
-     
+          getSearchBar()
+        ],
+      )
     );
   }
   
