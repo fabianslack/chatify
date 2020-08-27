@@ -73,6 +73,23 @@ class _ChatPreviewState extends State<ChatPreview>
     ));
   }
 
+  void handleLongTap()
+  {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30)
+      ),
+      context: context,
+      builder: (context)
+      {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+        );
+      }
+    );
+  }
+
   Widget getImage()
   {
     return Container(
@@ -181,6 +198,7 @@ class _ChatPreviewState extends State<ChatPreview>
 
     return GestureDetector(
       onTap: () => handleTap(),
+      onLongPress: () => handleLongTap(),
       child: Container(
         height: 75,
         child: getContent()

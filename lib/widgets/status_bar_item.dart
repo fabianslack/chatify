@@ -73,29 +73,7 @@ class _StatusBarItemState extends State<StatusBarItem>
         width: 65,
         child: Column(
           children: <Widget>[
-            _watched ? getCircularAvatar()
-            : Container(
-                height: 56,
-                width: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.red,
-                    width: 2
-                  )
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.black,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 3
-                    )
-                  ),
-                  child: getCircularAvatar()
-                )
-              ),
+            getCircularAvatar(),
             Padding(
               padding: const EdgeInsets.only(top:7),
               child: Text(

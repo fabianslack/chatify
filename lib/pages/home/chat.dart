@@ -24,9 +24,8 @@ class ChatPage extends StatefulWidget
   _ChatPageState createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> 
+class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin  
 {
-  double _width;
 
   MessageService _service;
 
@@ -36,8 +35,6 @@ class _ChatPageState extends State<ChatPage>
   File _imageFile;
   bool _online;
   Timer _timer;
-
-  bool _sharePressed = false;
 
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
@@ -56,7 +53,10 @@ class _ChatPageState extends State<ChatPage>
     _imagePicker = ImagePicker();
     _timer = Timer.periodic(Duration(minutes: 1), (timer) => onlineState());
     onlineState();
+
   }
+
+
 
   @override
   void dispose()
@@ -66,7 +66,10 @@ class _ChatPageState extends State<ChatPage>
     {
       _timer.cancel();
     }
+
+    _controller.dispose();
   }
+
 
   void init() 
   {
@@ -304,7 +307,19 @@ class _ChatPageState extends State<ChatPage>
         ),
         child: Center(
           child: GestureDetector(
-            onTap: () {},
+            onTap: () 
+            {
+              showModalBottomSheet(
+                context: context, 
+                builder: (context)
+                {
+                  return Container(
+                    height: 200,
+                    width: double.infinity,
+                    color: Colors.black,
+                  );
+                });
+            },
             child: Icon(
               Icons.add,
               color: Colors.white,
@@ -363,28 +378,6 @@ class _ChatPageState extends State<ChatPage>
         ),
       ),
     );
-    return Container(
-     padding:  EdgeInsets.fromLTRB(5, 5, (_textContainsText ? 5 : 0), 5),
-     width: _width,
-     height: 55,
-     decoration: BoxDecoration(
-       border: Border(
-         top: BorderSide(
-           color: Colors.grey[200],
-           width: 1
-         )
-       ),
-       color: Colors.white,
-     ),
-     child: Row(
-       children: <Widget>[
-         getShareButton(),
-         getTextField(),
-         getAudioButton(),
-         getCameraIcon()
-       ]
-     ),
-      );
   }
 
   Widget getChatColumn()
@@ -425,8 +418,8 @@ class _ChatPageState extends State<ChatPage>
   {
     return Column(
       children: <Widget>[
-       getChatColumn(),
-       _sharePressed ? SharePage() : getBottomBody(),
+      getChatColumn(),
+      getBottomBody(),
       ],
     );
   }
@@ -434,7 +427,6 @@ class _ChatPageState extends State<ChatPage>
   @override
   Widget build(BuildContext context) 
   {
-    _width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: getAppBar(),
       body: getBody(),

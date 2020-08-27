@@ -9,27 +9,18 @@ class SharePage extends StatefulWidget
 
 class _SharePageState extends State<SharePage> 
 {
+  	GlobalKey _key = GlobalKey();
+
   @override
   Widget build(BuildContext context) 
   {
-    return DraggableScrollableSheet(
-      maxChildSize: 0.8,
-      initialChildSize: 0.7,
-      builder: (context, scrollController)
-      {
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: theme.primaryColor
-          ),
-          child: ListView(
-            controller: scrollController,
-            children: <Widget>[
-              Text("Was geht")
-            ],
-          ),
-        );
-      },
+    return Scaffold(
+      backgroundColor: Colors.white.withOpacity(0.7),
+      body: Container(
+        height: 100,
+        width: double.infinity,
+        color: Colors.blueAccent,
+      ),
     );
   }
 }

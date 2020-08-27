@@ -7,6 +7,7 @@ import 'package:chatapp/widgets/chat_preview.dart';
 import 'package:chatapp/widgets/status_bar_item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
 
 class Home extends StatefulWidget 
@@ -18,13 +19,22 @@ class Home extends StatefulWidget
 class _HomeState extends State<Home> with TickerProviderStateMixin
 {
   Auth _auth;
+  final GlobalKey _searchHeightKey = GlobalKey();
 
   bool _searchPressed = false;
+  // is searchBar in show or not
+  bool _searchBarCollapsed = false;
+  // when the user scrolls up or down, this boolean is changed
+  // used for determining whether Search-Icon and Textfield should be shown or not
+  bool _searchBarSizeChange = false;
+
 
   var _stories;
+  String _profileImage;
   
   FriendsService _friendsService;
   TextEditingController _textController = TextEditingController();
+  ScrollController _scrollController = ScrollController();
 
   int _animationDuration = 250;
 
@@ -35,7 +45,53 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     _friendsService = FriendsService();
     _auth = Auth();
     loadStories();
+    getProfileImage();
+    _scrollController.addListener(onScrollUpdate);
 
+  }
+
+  void onScrollUpdate()
+  {
+    RenderBox box = _searchHeightKey.currentContext.findRenderObject();
+    Size size = box.size;
+
+    if(size.height < 5)
+    {
+      setState(() {
+        _searchBarCollapsed = true;
+      });
+    }
+
+    if(size.height > 5 && _searchBarCollapsed)
+    {
+      setState(() {
+        _searchBarCollapsed = false;
+      });
+    }
+
+    if(size.height < 30)
+    {
+      setState(() {
+        _searchBarSizeChange = true;
+      });
+    }
+
+    if(size.height >= 30&& _searchBarSizeChange)
+    {
+      setState(() {
+        _searchBarSizeChange = false;
+      });
+    }
+  }
+
+  void getProfileImage()
+  {
+    FriendsService.loadImage(Auth.getUserID()).then((value) 
+    {
+      setState(() {
+        _profileImage = value;
+      });
+    });
   }
 
   void handleLogOut() async
@@ -126,86 +182,90 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget getSearchBar()
   {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          AnimatedContainer(
-            alignment: Alignment.centerLeft,
-            curve: Curves.linear,
-            duration: Duration(milliseconds: _animationDuration),
-            padding: EdgeInsets.only(left: 5),
-            width: _searchPressed ? MediaQuery.of(context).size.width * 0.8: MediaQuery.of(context).size.width-20,
-            height: 35,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(10)
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.search,
-                  size: 25,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(width: 2,),
-                Expanded(
-                  child: TextField(
-                    style: TextStyle(
-                      color: Colors.black,
-                    ),
-                    controller: _textController,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      hintText: "Search",
-                      hintStyle: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 18
-                      ),
-                    ),
-                    onTap: ()
-                    {
-                      setState(() {
-                        _searchPressed = true;
-                      });
-                    },
-                  ),
-                )
-              ],
-            ),
-          ),
-          AnimatedSize(
-            duration: Duration(milliseconds: _animationDuration),
-            vsync: this,
-            child: GestureDetector(
-              onTap: ()
-              {
-                setState(() {
-                  _searchPressed = !_searchPressed;
-                });
-                FocusScope.of(context).unfocus();
-                _textController.clear();
-              },
-              child: Container(
-                height: _searchPressed ? 20 : 0,
-                child: _searchPressed ? Text(
-                "Close",
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 20
-                  ),
-                ) : Container(),
+    return Flexible(
+      fit: FlexFit.tight,
+      key: _searchHeightKey,
+      child: _searchBarCollapsed ? Container() : Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            AnimatedContainer(
+              alignment: Alignment.centerLeft,
+              curve: Curves.linear,
+              duration: Duration(milliseconds: _animationDuration),
+              padding: EdgeInsets.only(left: 5),
+              width: _searchPressed ? MediaQuery.of(context).size.width * 0.8: MediaQuery.of(context).size.width-20,
+              height: 35,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(10)
               ),
+              child:  _searchBarSizeChange ? Container() : Row(
+                children: [
+                  Icon(
+                    Icons.search,
+                    size: 25,
+                    color: Colors.grey[400],
+                  ) ,
+                  SizedBox(width: 2,),
+                  Expanded(
+                    child: TextField(
+                      style: TextStyle(
+                        color: Colors.black,
+                      ),
+                      controller: _textController,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        border: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        hintText: "Search",
+                        hintStyle: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 18
+                        ),
+                      ),
+                      onTap: ()
+                      {
+                        setState(() {
+                          _searchPressed = true;
+                        });
+                      },
+                    ),
+                  )
+                ],
+              ),
+            ),
+            AnimatedSize(
+              duration: Duration(milliseconds: _animationDuration),
+              vsync: this,
+              child: GestureDetector(
+                onTap: ()
+                {
+                  setState(() {
+                    _searchPressed = !_searchPressed;
+                  });
+                  FocusScope.of(context).unfocus();
+                  _textController.clear();
+                },
+                child: Container(
+                  height: _searchPressed ? 20 : 0,
+                  child: _searchPressed ? Text(
+                  "Close",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 20
+                    ),
+                  ) : Container(),
+                ),
+              )
             )
-          )
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -246,8 +306,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   Widget getBody()
   {
     return CustomScrollView(
+      controller: _scrollController,
       physics: BouncingScrollPhysics(),
       slivers: [
+        appBar(),
         CupertinoSliverRefreshControl(
           onRefresh: () 
           {
@@ -267,9 +329,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                   children: <Widget>[
                     SizedBox(height: 20,),
                     getStoryRow(),
-                    SizedBox(
-                      height: 15,
-                    ),
+                    SizedBox(height: 10,),
                     getChats(),
                     getLogoutButton(),
                   ],
@@ -295,12 +355,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget appBar()
   {
-    return PreferredSize(
-      preferredSize: Size.fromHeight(105),
-      child: Column(
+    return SliverAppBar(
+      pinned: true,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      expandedHeight: 100,
+      flexibleSpace: Column(
         children: [
           AnimatedContainer(
-            height: _searchPressed ? 0 : 85,
+            height: _searchPressed ? 0 : 80,
             duration: Duration(milliseconds: _animationDuration),
             child: AppBar(
               elevation: 0,
@@ -314,40 +377,40 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                   fontWeight: FontWeight.bold
                 )
               ),
-              leading: IconButton(
-                icon: Icon(
-                  Icons.supervised_user_circle,
-                  color: Colors.grey[600],
-                  size: 30
+              bottom: _searchBarCollapsed ?  PreferredSize(
+                preferredSize: Size.fromHeight(1),
+                child: Container(
+                  height: 1,
+                  width: double.infinity,
+                  color: Colors.grey[200],
                 ),
-                onPressed: () => navigateToProfile()
+              ) : null,
+              leading: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  onTap: () => navigateToProfile(),
+                  child: CircleAvatar(
+                    backgroundImage: _profileImage != null ? NetworkImage(
+                      _profileImage
+                    ) : AssetImage("assets/logo.png"),
+                  )
+                ),
               ),
               actions: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: Container(
-                    height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.grey[200]
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.add_circle_outline,
-                        color: Colors.grey,
-                        size: 25
-                      ),
-                      onPressed: () 
-                      {
-                      },
-                    ),
+                IconButton(
+                  splashRadius: 20,
+                  icon: Icon(
+                    Icons.add,
+                    color: Colors.blue,
+                    size: 30
                   ),
+                  onPressed: () 
+                  {
+                  },
                 )
               ],
             ),
           ),
-          AnimatedContainer(duration: Duration(milliseconds: _animationDuration), height: _searchPressed ? 40 : 0,),
           getSearchBar()
         ],
       )
@@ -359,7 +422,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
   Widget build(BuildContext context) 
   {
     return Scaffold(
-      appBar: appBar(),
       body: getBody(),
       backgroundColor: Colors.white,
     );
