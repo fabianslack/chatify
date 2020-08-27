@@ -4,8 +4,8 @@ import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/themes/theme.dart';
 import 'package:flutter/material.dart';
 import 'home/home.dart';
-import 'profile_page.dart';
-import 'usersettings_page.dart';
+import 'profile/profile_page.dart';
+import 'profile/usersettings_page.dart';
 
 class RootPage extends StatefulWidget {
   @override

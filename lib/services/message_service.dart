@@ -1,11 +1,35 @@
+import 'dart:io';
+
 import 'package:chatapp/services/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
-class MessageService {
+class MessageService 
+{
   
+  String _peerID;
   String _chatID;
+  ImagePicker _imagePicker;
 
-  MessageService(this._chatID);
+  MessageService(this._peerID)
+  {
+    _imagePicker = ImagePicker();
+    _getChatId();
+  }
+
+  void _getChatId()
+  {
+    String id = Auth.getUserID();
+    if(_peerID.hashCode >= id.hashCode)
+    {
+      _chatID = '' + (_peerID.hashCode - id.hashCode).toString();
+    }
+    else
+    {
+      _chatID = '' + (id.hashCode - _peerID.hashCode).toString();
+    }
+  }
 
   Stream getStream()
   {
@@ -97,5 +121,30 @@ class MessageService {
     snapshots();
   }
 
+  void selectImage() async
+  {
+    File _imageFile;
+    final pickedFile = await _imagePicker.getImage(source: ImageSource.gallery);
+    if(pickedFile.path != null)
+    {
+      _imageFile = File(pickedFile.path);
+    }
 
+    if(_imageFile != null)
+    {
+      uploadFile(_imageFile);
+    }
+  }
+
+  void uploadFile(File _imageFile) async
+  {
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    StorageReference _ref = FirebaseStorage.instance.ref().child(fileName);
+    StorageUploadTask uploadTask = _ref.putFile(_imageFile);
+    StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
+    storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl)
+    {
+      sendMessage(downloadUrl, 1);
+    });
+  }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:chatapp/pages/home/chat.dart';
+import 'package:chatapp/pages/home/share_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
@@ -85,6 +86,7 @@ class _ChatPreviewState extends State<ChatPreview>
       {
         return Container(
           height: MediaQuery.of(context).size.height * 0.8,
+          child: SharePage(widget._id),
         );
       }
     );
@@ -155,36 +157,36 @@ class _ChatPreviewState extends State<ChatPreview>
                 ),
 
               Row(
-                children: <Widget>[
-                  Text(
-                    widget._message ? widget._ref["content"] : "",
-                    overflow: TextOverflow.ellipsis,
-                    style:  TextStyle(
-                      fontSize: 16, 
-                      color: Colors.grey
-                    )
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Container(
-                      height: 2,
-                      width: 2,
-                      decoration: BoxDecoration(
-                        color: Colors.grey,
-                        shape: BoxShape.circle
+                  children: <Widget>[
+                    Text(
+                      widget._message ? widget._ref["content"] : "",
+                      overflow: TextOverflow.ellipsis,
+                      style:  TextStyle(
+                        fontSize: 16, 
+                        color: Colors.grey
+                      )
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Container(
+                        height: 2,
+                        width: 2,
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          shape: BoxShape.circle
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    _time,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                      color: Colors.grey
+                    Text(
+                      _time,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        color: Colors.grey
+                      ),
                     ),
-                  ),
-                ]
-              )
+                  ]
+                )
             ],
           ),
         ),

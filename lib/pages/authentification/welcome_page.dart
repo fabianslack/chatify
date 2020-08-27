@@ -5,8 +5,8 @@ import 'package:chatapp/services/authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:liquid_swipe/liquid_swipe.dart';
 
-import 'authentification/signup_page.dart';
-import 'authentification/signup_page.dart';
+import 'signup_page.dart';
+import 'signup_page.dart';
 
 class WelcomePage extends StatefulWidget {
   final Auth _auth;

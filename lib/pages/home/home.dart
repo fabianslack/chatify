@@ -1,4 +1,4 @@
-import 'package:chatapp/pages/profile_page.dart';
+import 'package:chatapp/pages/profile/profile_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';

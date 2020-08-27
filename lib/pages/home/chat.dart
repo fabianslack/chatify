@@ -30,8 +30,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   MessageService _service;
 
   bool _textContainsText = false;
-  String peerId;
-  String chatID;
   File _imageFile;
   bool _online;
   Timer _timer;
@@ -46,14 +44,10 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   {
     super.initState();
     _online = false;
-    chatID = '';
-    peerId = widget.id;
-    init();
-    _service = MessageService(chatID);
+    _service = MessageService(widget.id);
     _imagePicker = ImagePicker();
     _timer = Timer.periodic(Duration(minutes: 1), (timer) => onlineState());
     onlineState();
-
   }
 
 
@@ -71,36 +65,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   }
 
 
-  void init() 
-  {
-    String id = Auth.getUserID();
-    if(peerId.hashCode >= id.hashCode)
-    {
-      chatID = '' + (peerId.hashCode - id.hashCode).toString();
-    }
-    else
-    {
-      chatID = '' + (id.hashCode - peerId.hashCode).toString();
-    }
-  }
-
-  void getImage() async
-  {
-    final pickedFile = await _imagePicker.getImage(source: ImageSource.gallery);
-    if(pickedFile.path != null)
-    {
-      _imageFile = File(pickedFile.path);
-    }
-
-    if(_imageFile != null)
-    {
-      uploadFile();
-    }
-  }
-
   void onlineState()
   {
-    MessageService.getOnlineState(peerId).then((value) 
+    MessageService.getOnlineState(widget.id).then((value) 
     {
       setState(() {
         _online = value;
@@ -108,17 +75,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     });
   }
 
-  void uploadFile() async
-  {
-    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    StorageReference _ref = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = _ref.putFile(_imageFile);
-    StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
-    storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl)
-    {
-      _service.sendMessage(downloadUrl, 1);
-    });
-  }
 
   void onSendClicked()
   {
@@ -310,15 +266,19 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
             onTap: () 
             {
               showModalBottomSheet(
-                context: context, 
+                isScrollControlled: true,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)
+                ),
+                context: context,
                 builder: (context)
                 {
                   return Container(
-                    height: 200,
-                    width: double.infinity,
-                    color: Colors.black,
+                    height: MediaQuery.of(context).size.height * 0.8,
+                    child: SharePage(widget.id),
                   );
-                });
+                }
+              );
             },
             child: Icon(
               Icons.add,
