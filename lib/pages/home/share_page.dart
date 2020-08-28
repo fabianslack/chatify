@@ -1,5 +1,8 @@
+import 'package:camera/camera.dart';
+import 'package:chatapp/pages/home/camera_page.dart';
 import 'package:chatapp/services/message_service.dart';
-import 'package:chatapp/widgets/share_image_widget.dart';
+import 'package:chatapp/widgets/share_page_widgets/share_camera_widget.dart';
+import 'package:chatapp/widgets/share_page_widgets/share_image_widget.dart';
 import 'package:flutter/material.dart';
 
 class SharePage extends StatefulWidget 
@@ -15,12 +18,28 @@ class SharePage extends StatefulWidget
 class _SharePageState extends State<SharePage> 
 {
   MessageService _messageService;
+  List<CameraDescription> _cameras;
+
 
   @override
   void initState()
   {
     super.initState();
+    loadCameras();
     _messageService = MessageService(widget._id);
+  }
+
+  void loadCameras() async
+  {
+    _cameras = await availableCameras();
+  }
+
+
+  void navigateToCamera()
+  {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => CameraPage(_cameras)
+    ));
   }
 
   Widget getTopContainer()
@@ -39,7 +58,9 @@ class _SharePageState extends State<SharePage>
   {
     return Column(
       children: [
-        ShareImageWidget(_messageService.selectImage)
+        ShareImageWidget(_messageService.selectImage),
+        SizedBox(height: 20,),
+        ShareCameraWidget(navigateToCamera)
       ],
     );
   }

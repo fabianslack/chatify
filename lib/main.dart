@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:chatapp/pages/Root_page.dart';
 import 'package:chatapp/pages/profile/profile_page.dart';
 import 'package:chatapp/pages/authentification/splash_screen.dart';
@@ -7,7 +8,11 @@ import 'pages/authentification/welcome_page.dart';
 import 'services/authentication.dart';
 
 
-void main() => runApp(MyApp());
+void main() 
+{
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
+}
 
 class MyApp extends StatefulWidget 
 {

@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/message_service.dart';
-import 'package:chatapp/widgets/chat_image.dart';
-import 'package:chatapp/widgets/chat_message_widget.dart';
+import 'package:chatapp/widgets/chat_widgets/chat_image.dart';
+import 'package:chatapp/widgets/chat_widgets/chat_message_widget.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -359,7 +359,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
           }
           if(ref['type'] == 0)
           {
-            return ChatMessage(ref, onMessageDoubleTap);
+            return ChatMessage(ref, onMessageDoubleTap, index);
           }
           else if(ref['type'] == 1)
           {

@@ -1,7 +1,7 @@
 import 'package:chatapp/services/search.dart';
 import 'package:chatapp/themes/theme.dart';
-import 'package:chatapp/widgets/recent_search_widget.dart';
-import 'package:chatapp/widgets/search_user_widget.dart';
+import 'package:chatapp/widgets/search_widgets/recent_search_widget.dart';
+import 'package:chatapp/widgets/search_widgets/search_user_widget.dart';
 import 'package:flutter/material.dart';
 
 class SearchPage extends StatefulWidget 

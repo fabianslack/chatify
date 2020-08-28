@@ -1,22 +1,18 @@
-
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class ShareImageWidget extends StatelessWidget 
+abstract class ShareWidget extends StatelessWidget 
 {
   final Function _callback;
 
-  ShareImageWidget(this._callback);
+  ShareWidget(this._callback);
 
-  @override
-  Widget build(BuildContext context) 
+  Widget getBody(String text, BuildContext context, Color color1, Color color2, IconData icon)
   {
     return GestureDetector(
       onTap: () 
       {
-        _callback();
         Navigator.of(context).pop();
+        _callback();
       },
       child: Container(
         padding: const EdgeInsets.all(10),
@@ -26,33 +22,34 @@ class ShareImageWidget extends StatelessWidget
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
             colors: [
-              Colors.pink[300],
-              Colors.orangeAccent
+              color1,
+              color2
             ]
           ),
           boxShadow: [
             BoxShadow(
               color: Colors.grey,
               offset: Offset(3, 2),
-              blurRadius: 3
+              blurRadius: 4
             )
           ]
         ),    
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               height: 70,
               width: 70,
               child: Icon(
-                Icons.camera_enhance,
-                size: 50,
+                icon,
+                size: 60,
               )
             ),
             SizedBox(width: 5),
             Container(
               width: 250,
               child: Text(
-                "Share an image or video with your friends",
+                text,
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -63,6 +60,6 @@ class ShareImageWidget extends StatelessWidget
           ],
         )
       ),
-    );
+    ); 
   }
 }

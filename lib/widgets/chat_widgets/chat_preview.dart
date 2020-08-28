@@ -147,46 +147,39 @@ class _ChatPreviewState extends State<ChatPreview>
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-                Text(widget._username,
-                  overflow: TextOverflow.clip,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 18,
-                    color: Colors.black
-                  )
-                ),
-
-              Row(
-                  children: <Widget>[
-                    Text(
-                      widget._message ? widget._ref["content"] : "",
-                      overflow: TextOverflow.ellipsis,
-                      style:  TextStyle(
-                        fontSize: 16, 
-                        color: Colors.grey
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(widget._username,
+                      overflow: TextOverflow.clip,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 18,
+                        color: Colors.black
                       )
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Container(
-                        height: 2,
-                        width: 2,
-                        decoration: BoxDecoration(
-                          color: Colors.grey,
-                          shape: BoxShape.circle
-                        ),
-                      ),
                     ),
                     Text(
                       _time,
                       style: TextStyle(
+                        color: Colors.grey,
                         fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                        color: Colors.grey
-                      ),
+                        fontSize: 14
+                      )
                     ),
-                  ]
+                  ],
+                ),
+              ),
+              SizedBox(height: 5,),
+              Text(
+                widget._message ? widget._ref["type"] == 0 ? widget._ref["content"] : "Image" : "",
+                overflow: TextOverflow.ellipsis,
+                style:  TextStyle(
+                  fontSize: 16, 
+                  color: Colors.grey
                 )
+              )
             ],
           ),
         ),

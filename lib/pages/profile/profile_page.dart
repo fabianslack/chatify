@@ -1,6 +1,6 @@
 
 import 'package:chatapp/services/friends_service.dart';
-import 'package:chatapp/widgets/request_widget.dart';
+import 'package:chatapp/widgets/search_widgets/request_widget.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget 
