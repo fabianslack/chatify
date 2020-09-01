@@ -1,5 +1,6 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chatapp/models/chat_model.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:flutter/material.dart';
 
@@ -9,17 +10,17 @@ class ChatImage extends StatelessWidget
 {
   bool _left;
 
-  var _ref;
+  ChatModel _ref;
 
   ChatImage(this._ref)
   {
-    _left = _ref["from"] == Auth.getUserID();
+    _left = _ref.from() == Auth.getUserID();
   }
 
   @override
   Widget build(BuildContext context) 
   {
-    DateTime time = DateTime.fromMillisecondsSinceEpoch(_ref["timestamp"]);
+    DateTime time = DateTime.fromMillisecondsSinceEpoch(_ref.timestamp());
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
@@ -63,7 +64,7 @@ class ChatImage extends StatelessWidget
                    ),
                    clipBehavior: Clip.hardEdge,
                  ),
-                 imageUrl: _ref["content"],
+                 imageUrl: _ref.content(),
                  width: 200.0,
                  height: 200.0,
                  fit: BoxFit.cover,
@@ -73,7 +74,7 @@ class ChatImage extends StatelessWidget
              ),
              onPressed: () {
                Navigator.push(
-                   context, MaterialPageRoute(builder: (context) => FullPhoto(url: _ref["content"])));
+                   context, MaterialPageRoute(builder: (context) => FullPhoto(url: _ref.content())));
              },
            ),
            _left ? Text(

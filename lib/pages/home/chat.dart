@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'dart:io';
-
+import 'package:camera/camera.dart';
+import 'package:chatapp/models/chat_model.dart';
+import 'package:chatapp/pages/home/camera_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/chat_widgets/chat_image.dart';
 import 'package:chatapp/widgets/chat_widgets/chat_message_widget.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'share_page.dart';
 
 /// This class add the chatting funcionality to the app.
@@ -30,27 +30,32 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   MessageService _service;
 
   bool _textContainsText = false;
-  File _imageFile;
+  bool _camera = false;
   bool _online;
   Timer _timer;
 
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
-  ImagePicker _imagePicker;
+
+  List<CameraDescription> _cameras;
+  bool _closed = false;
+
+  List<ChatModel> _messages = List();
+
 
 
   @override
   void initState()
   {
     super.initState();
-    _online = false;
     _service = MessageService(widget.id);
-    _imagePicker = ImagePicker();
+    _service.createFile().then((_) => loadMessages());
+    loadCameras();
+    _online = false;
     _timer = Timer.periodic(Duration(minutes: 1), (timer) => onlineState());
     onlineState();
+   // listen();
   }
-
-
 
   @override
   void dispose()
@@ -60,10 +65,26 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     {
       _timer.cancel();
     }
-
+    _closed = true;
     _controller.dispose();
+
+    _scrollController.dispose();
+    _service.writeToFile(_messages);
   }
 
+  void loadMessages()
+  {
+    setState(() 
+    {
+      _messages = List.from(_service.readFile());
+    });
+
+  }
+
+  void loadCameras() async
+  {
+    _cameras = await availableCameras();
+  }
 
   void onlineState()
   {
@@ -75,12 +96,12 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     });
   }
 
-
   void onSendClicked()
   {
-    _service.sendMessage(_controller.text.trim(), 0);
-    _scrollController.animateTo(0.0, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+    
+    _service.sendMessage(_controller.text.trim(), 0).then((value) => loadMessages());
 
+    _scrollController.animateTo(_scrollController.position.maxScrollExtent, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
     _controller.clear();
     setState(() {
       _textContainsText = false;
@@ -90,6 +111,38 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   void onMessageDoubleTap(int timestamp, bool liked)
   {
     _service.likeMessage(timestamp, liked);
+  }
+
+  void onCameraDismissed()
+  {
+    setState(() {
+      _camera = false;
+    });
+  }
+
+  void listen()
+  {
+    if(!_closed)
+    {
+      _service.getStream().listen((event) 
+      { 
+        for(int counter = 0; counter < event.documents.length; counter++)
+        {
+          ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
+          if(model.from() != Auth.getUserID())
+          {
+            setState(() 
+            {   
+              _messages.insert(_messages.length-1, model);
+              //_messages.add(model);
+            });
+            _service.writeToFile(_messages);
+            _service.deleteMessage(event.documents[counter]["timestamp"]);
+          }
+        }
+      });
+      
+    }
   }
 
   Widget getAppBar()
@@ -179,7 +232,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
 
   Widget getTextField()
   {
-    return Flexible(
+    return Expanded(
       child: Container(
         padding: EdgeInsets.only(left: 10),
         child: TextField(
@@ -213,7 +266,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
                     style: TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 20
+                      fontSize: 18
                     ),
                   ),
                 ),
@@ -237,7 +290,12 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     return !_textContainsText ? Container(
       width: 40,
       child: IconButton(
-        onPressed: () {},
+        onPressed: () 
+        {
+          setState(() {
+            _camera = true;
+          });
+        },
         icon: Icon(
           Icons.camera_alt,
           size: 27,
@@ -343,32 +401,29 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   Widget getChatColumn()
   {
     return Expanded(
-      child: StreamBuilder(
-      stream: _service.getStream(),
-      builder: (context, snapshot) => snapshot.data != null ? ListView.builder(
+      child: ListView.builder(
         controller: _scrollController,
-        reverse: true,
+        itemCount: _messages.length,
+        //reverse: true,
         physics: BouncingScrollPhysics(),
-        itemCount: snapshot.data.documents.length,
-        itemBuilder: (context, index) 
+        itemBuilder: (context, index)
         {
-          var ref = snapshot.data.documents[index];
-          if(ref['from'] != Auth.getUserID())
+          ChatModel model = _messages[index];
+          print(model.from());
+          if(model.from() != Auth.getUserID())
           {
-            _service.setRead(ref['timestamp']);
+            _service.setRead(model.timestamp());
           }
-          if(ref['type'] == 0)
+          if(model.type() == 0)
           {
-            return ChatMessage(ref, onMessageDoubleTap, index);
+            return ChatMessage(model, onMessageDoubleTap, index);
           }
-          else if(ref['type'] == 1)
+          else if(model.type() == 1)
           {
-            return ChatImage(ref);
+            return ChatImage(model);
           }
           return Container();
         }
-      ) : Container(),
-        
       ),
     );
   }
@@ -387,10 +442,14 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) 
   {
-    return Scaffold(
-      appBar: getAppBar(),
-      body: getBody(),
-      backgroundColor: Colors.white,
+    return Stack(
+      children:[ Scaffold(
+        appBar: getAppBar(),
+        body: getBody(),
+        backgroundColor: Colors.white,
+      ),
+      _camera ? CameraPage(_cameras, widget.id, onCameraDismissed) : Container()
+      ]
     );
   }
 }
