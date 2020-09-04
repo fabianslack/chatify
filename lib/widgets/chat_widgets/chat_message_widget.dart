@@ -10,9 +10,13 @@ class ChatMessage extends StatefulWidget
 
   ChatModel _ref;
 
+  bool _showImage;
+
   Function _onDoubleClick;
 
-  ChatMessage(this._ref, this._onDoubleClick, this._index);
+  String _profileImage;
+
+  ChatMessage(this._ref, this._onDoubleClick, this._index, this._showImage, this._profileImage);
 
   @override
   _ChatMessageState createState() => _ChatMessageState();
@@ -41,7 +45,7 @@ class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
 
     return  Container(
       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width*0.7),
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
       decoration: BoxDecoration(
         borderRadius:BorderRadius.circular(20),
           color: _right ? Color(0xff0079ff) : Color(0xffeeeeee),
@@ -76,43 +80,36 @@ class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
   Widget build(BuildContext context) 
   {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical:1),
-      child: Column(
-        crossAxisAlignment: _right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      padding: EdgeInsets.fromLTRB(widget._showImage ? 0 : 36, 1, 8, 1),
+      child: Row(
+        mainAxisAlignment: !_right ? MainAxisAlignment.start : MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Row(
-            mainAxisAlignment: !_right ? MainAxisAlignment.start : MainAxisAlignment.end,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  GestureDetector(
-                    onDoubleTap: () 
-                    {
-                      _liked = !_liked;
-                      widget._onDoubleClick(widget._ref.timestamp(), _liked);
-                      HapticFeedback.vibrate();
-                    },
-                   child: getChatContainer()
-                  ),
-                  _received && widget._index == 0 && widget._ref.from() == Auth.getUserID() ? getReadText() : Container() 
-                ],
+          widget._showImage ? Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 4, 0),
+            child: CircleAvatar(
+              radius: 12,
+              backgroundImage: NetworkImage(
+                widget._profileImage
               )
-              
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal:2, vertical: 2),
-            child: AnimatedSize(
-              duration: Duration(milliseconds: 500),
-              curve: Curves.easeInOut,
-              vsync: this,
-              child: Icon(
-                Icons.favorite, 
-                color: Colors.red,
-                size: _liked ? 20 : 0,),
             ),
-          ) 
+          ) : Container(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onDoubleTap: () 
+                {
+                  _liked = !_liked;
+                  widget._onDoubleClick(widget._ref.timestamp(), _liked);
+                  HapticFeedback.vibrate();
+                },
+               child: getChatContainer()
+              ),
+              _received && widget._index == 0 && widget._ref.from() == Auth.getUserID() ? getReadText() : Container() 
+            ],
+          )
+          
         ],
       )
     );

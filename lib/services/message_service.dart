@@ -20,6 +20,7 @@ class MessageService
   StreamController<List<ChatModel>> _controller = StreamController();
   bool _closed = false;
   List<ChatModel> _messages = List();
+  int _lastMessageTime = 0;
   
 
   MessageService(this._peerID)
@@ -53,11 +54,13 @@ class MessageService
           ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
           if(model.from() != Auth.getUserID())
           {
-            deleteMessage(event.documents[counter]["timestamp"]);
+            deleteMessage(model.timestamp());
             _messages.add(model);
             _controller.sink.add(_messages);
+            _lastMessageTime = model.timestamp();
           }
         }
+        
       });
     }
   }
@@ -137,14 +140,14 @@ class MessageService
       snapshots();
   }
 
-  // void setRead(int timestamp)
+  // void setRead()
   // {
   //   Firestore.
   //   instance.
   //   collection("chats").
   //   document(_chatID).
   //   collection("messages").
-  //   document(timestamp.toString()).
+  //   document(_lastMessageTime.toString()).
   //   updateData(
   //     {
   //       'received' : true

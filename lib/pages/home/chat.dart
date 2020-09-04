@@ -381,13 +381,25 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
                     List.generate(snapshot.data.length, (index)
                     {
                       ChatModel model = snapshot.data[index];
-                      if(model.from() != Auth.getUserID())
+                      bool showImage = false;
+                      if(index != snapshot.data.length-1)
                       {
-                      // _service.setRead(model.timestamp());
+                        if(snapshot.data[index+1].from() == Auth.getUserID() && model.from() != Auth.getUserID())
+                        {
+                          // letzte nachricht vom anderen user
+                          showImage = true;
+                        }
+                      }
+                      else
+                      {
+                        if(model.from() != Auth.getUserID())
+                        { 
+                          showImage = true;
+                        }
                       }
                       if(model.type() == 0)
                       {
-                        return ChatMessage(model, onMessageDoubleTap, 1);
+                        return ChatMessage(model, onMessageDoubleTap, 1, showImage, widget._imageRef);
                       }
                       else if(model.type() == 1)
                       {

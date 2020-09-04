@@ -120,6 +120,14 @@ class Auth
     return null;
   }
 
+  Future<String> getProfileImage()
+  {
+    return Firestore.instance.collection("users").document(userID).get().then((value)
+    {
+      return value["profileUrl"];
+    });
+  }
+
   void setOnlineStatus(bool online)
   {
     Firestore.instance.collection("users").document(userID).updateData(
