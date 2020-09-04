@@ -6,7 +6,6 @@ import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/chat_widgets/chat_image.dart';
 import 'package:chatapp/widgets/chat_widgets/chat_message_widget.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'share_page.dart';
 
@@ -38,23 +37,16 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   ScrollController _scrollController = ScrollController();
 
   List<CameraDescription> _cameras;
-  bool _closed = false;
-
-  List<ChatModel> _messages = List();
-
-
 
   @override
   void initState()
   {
     super.initState();
     _service = MessageService(widget.id);
-    _service.createFile().then((_) => loadMessages());
     loadCameras();
     _online = false;
     _timer = Timer.periodic(Duration(minutes: 1), (timer) => onlineState());
     onlineState();
-   // listen();
   }
 
   @override
@@ -65,20 +57,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     {
       _timer.cancel();
     }
-    _closed = true;
     _controller.dispose();
-
+    _service.onClose();
     _scrollController.dispose();
-    _service.writeToFile(_messages);
-  }
-
-  void loadMessages()
-  {
-    setState(() 
-    {
-      _messages = List.from(_service.readFile());
-    });
-
   }
 
   void loadCameras() async
@@ -98,19 +79,25 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
 
   void onSendClicked()
   {
-    
-    _service.sendMessage(_controller.text.trim(), 0).then((value) => loadMessages());
-
-    _scrollController.animateTo(_scrollController.position.maxScrollExtent, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+    _service.sendMessage(_controller.text.trim(), 0);
+   navigateToBottom();
     _controller.clear();
     setState(() {
       _textContainsText = false;
     });
   }
 
+  void navigateToBottom()
+  {
+     _scrollController.animateTo(
+      0.0,
+      duration: Duration(milliseconds: 250),
+      curve: Curves.linear);
+  }
+
   void onMessageDoubleTap(int timestamp, bool liked)
   {
-    _service.likeMessage(timestamp, liked);
+    //_service.likeMessage(timestamp, liked);
   }
 
   void onCameraDismissed()
@@ -118,31 +105,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     setState(() {
       _camera = false;
     });
-  }
-
-  void listen()
-  {
-    if(!_closed)
-    {
-      _service.getStream().listen((event) 
-      { 
-        for(int counter = 0; counter < event.documents.length; counter++)
-        {
-          ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
-          if(model.from() != Auth.getUserID())
-          {
-            setState(() 
-            {   
-              _messages.insert(_messages.length-1, model);
-              //_messages.add(model);
-            });
-            _service.writeToFile(_messages);
-            _service.deleteMessage(event.documents[counter]["timestamp"]);
-          }
-        }
-      });
-      
-    }
   }
 
   Widget getAppBar()
@@ -401,30 +363,48 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   Widget getChatColumn()
   {
     return Expanded(
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: _messages.length,
-        //reverse: true,
-        physics: BouncingScrollPhysics(),
-        itemBuilder: (context, index)
+      child: StreamBuilder(
+        stream: _service.stream,
+        builder: (context, snapshot)
         {
-          ChatModel model = _messages[index];
-          print(model.from());
-          if(model.from() != Auth.getUserID())
-          {
-            _service.setRead(model.timestamp());
-          }
-          if(model.type() == 0)
-          {
-            return ChatMessage(model, onMessageDoubleTap, index);
-          }
-          else if(model.type() == 1)
-          {
-            return ChatImage(model);
-          }
-          return Container();
+        return snapshot.data != null ? ListView(
+          reverse: true,
+          controller: _scrollController,
+          physics: BouncingScrollPhysics(),
+          children: [
+            CustomScrollView(
+              physics: BouncingScrollPhysics(),
+              shrinkWrap: true,
+              slivers:[
+                SliverList(
+                  delegate: SliverChildListDelegate(
+                    List.generate(snapshot.data.length, (index)
+                    {
+                      ChatModel model = snapshot.data[index];
+                      if(model.from() != Auth.getUserID())
+                      {
+                      // _service.setRead(model.timestamp());
+                      }
+                      if(model.type() == 0)
+                      {
+                        return ChatMessage(model, onMessageDoubleTap, 1);
+                      }
+                      else if(model.type() == 1)
+                      {
+                        return ChatImage(model);
+                      }
+                      return Container();
+                      }
+                    ),
+                  ),
+                )
+                
+              ]
+            )
+          ],
+        ) : Container();
         }
-      ),
+      )
     );
   }
 

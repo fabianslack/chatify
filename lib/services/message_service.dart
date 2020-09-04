@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class MessageService 
 {
@@ -15,11 +17,60 @@ class MessageService
   String _chatID;
   ImagePicker _imagePicker;
   File _file;
+  StreamController<List<ChatModel>> _controller = StreamController();
+  bool _closed = false;
+  List<ChatModel> _messages = List();
+  
 
   MessageService(this._peerID)
   {
     _imagePicker = ImagePicker();
     _getChatId();
+    createFile().then((value)
+    {
+      readFile();
+      listen();
+    });
+  }
+
+  Stream<List<ChatModel>> get stream => _controller.stream;
+
+  void onClose()
+  {
+    _closed = true;
+    writeToFile();
+    _controller.close();
+  }
+
+  void listen()
+  {
+    if(!_closed)
+    {
+      getStream().listen((event) 
+      { 
+        for(int counter = 0; counter < event.documents.length; counter++)
+        {
+          ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
+          if(model.from() != Auth.getUserID())
+          {
+            deleteMessage(event.documents[counter]["timestamp"]);
+            _messages.add(model);
+            _controller.sink.add(_messages);
+          }
+        }
+      });
+    }
+  }
+
+  Future<void> createFile() async
+  {
+    var path = await getApplicationDocumentsDirectory();
+    String filepath = p.join(path.path, _peerID + ".json");
+    _file = new File(filepath);
+    if(!await _file.exists())
+    {
+      _file.writeAsStringSync(json.encode(new List()));
+    }
   }
 
   void _getChatId()
@@ -35,94 +86,46 @@ class MessageService
     }
   }
 
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-
-    return directory.path;
-  }
-
-
-  Future<void> createFile() async
+  void writeToFile()
   {
-    String path = await _localPath;
-    _file = File('$path/$_chatID.json');
-  }
-
-  void writeToFile(List<ChatModel> model)
-  {
-    if(_file != null)
+    try
     {
-      try
-      {
-
-        List<Map<String, dynamic>> jsonString = List();
-        model.forEach((element) 
-        {
-          jsonString.insert(0, element.toJson());
-        });
-        _file.writeAsStringSync(json.encode(jsonString));
-      }
-      catch(e)
+      List<Map<String, dynamic>> jsonString = List();
+      _messages.forEach((element) 
       { 
-        print(e);
-      }
+        jsonString.add(element.toJson());
+      });
+      _file.writeAsStringSync(json.encode(jsonString)); 
     }
-    else
-    {
-      print("File doesnt exist");
-    }
-  }
-
-  void addToFile(ChatModel model)
-  {
-    if(_file != null)
-    {
-      try
-      {
-        List<ChatModel> content = readFile();
-        content.add(model);
-        var jsonString = List();
-        content.forEach((element) 
-        {
-          jsonString.add(element.toJson());
-        });
-        _file.writeAsStringSync(json.encode(jsonString));
-      }
-      catch(e)
-      {
-        print(e);
-      }
+    catch(e)
+    { 
+      print(e);
     }
   }
-
+  
   Future<void> deleteMessage(int timestamp) async
   {
-    print("delted");
     await Firestore.instance.collection("chats").document(_chatID).collection("messages").document(timestamp.toString()).delete();
   }
 
-  List<ChatModel> readFile()
+  void readFile() 
   {
-    List<ChatModel> models = List();
-    print(_file);
-    if(_file != null)
+    try
     {
-      try
+      List<dynamic> jsonFileContent = json.decode( _file.readAsStringSync());
+      for(int counter = 0; counter < jsonFileContent.length; counter++)
       {
-        List<dynamic> jsonFileContent = json.decode(_file.readAsStringSync());
-        for(int counter = 0; counter < jsonFileContent.length; counter++)
-        {
-          models.insert(0, ChatModel.fromJson(jsonFileContent[counter]));
-        }
+        _messages.add(ChatModel.fromJson(jsonFileContent[counter]));
       }
-      catch(e)
-      {
-        print(e);
-        return List();
-      }
-
+      _controller.sink.add(_messages);
     }
-    return models;
+    catch(e)
+    {
+      print(_file);
+      print("error occured: " + e.toString());
+      // print(e);
+    }
+    
   }
 
   Stream getStream()
@@ -130,50 +133,50 @@ class MessageService
     return Firestore.instance.collection("chats").
       document(_chatID).
       collection("messages").
-      orderBy("timestamp", descending: true).
       where("from", isEqualTo: _peerID).
       snapshots();
   }
 
-  void setRead(int timestamp)
-  {
-    Firestore.
-    instance.
-    collection("chats").
-    document(_chatID).
-    collection("messages").
-    document(timestamp.toString()).
-    updateData(
+  // void setRead(int timestamp)
+  // {
+  //   Firestore.
+  //   instance.
+  //   collection("chats").
+  //   document(_chatID).
+  //   collection("messages").
+  //   document(timestamp.toString()).
+  //   updateData(
+  //     {
+  //       'received' : true
+  //     }
+  //   );
+  // }
+
+  ChatModel _createModel(String content, int type)
+  { 
+    return ChatModel.fromJson(
       {
-        'received' : true
+        'from' : Auth.getUserID(),
+        'content' : content,
+        'timestamp' : DateTime.now().millisecondsSinceEpoch,
+        'type' : type,
+        'received' : false,
+        'liked' : false
       }
     );
   }
 
   Future<void> sendMessage(String content, int type)
   {
-    print("message sent");
-    int time = DateTime.now().millisecondsSinceEpoch;
-    ChatModel model = ChatModel.fromJson(
-      {
-        'from' : Auth.getUserID(),
-        'content' : content,
-        'timestamp' : time,
-        'type' : type,
-        'received' : false,
-        'liked' : false
-      }
-    );
-    var modellist = readFile();
-    modellist.add(model);
-    writeToFile(modellist);
+    ChatModel model = _createModel(content, type);
     var docRef = Firestore.
       instance.
       collection("chats").
       document(_chatID).
       collection("messages").
-      document(time.toString());
-
+      document(model.timestamp().toString());
+    _messages.add( model);
+    _controller.sink.add(_messages);
     return Firestore.instance.runTransaction((transaction) async 
     {
       await transaction.set(docRef, model.toJson());
