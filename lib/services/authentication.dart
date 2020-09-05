@@ -93,7 +93,8 @@ class Auth
           'stories': [],
           'requests' : [],
           'online' : false,
-          'profileUrl' : ""
+          'profileUrl' : "",
+          'typing' : 'null'
         });
         userID = user.uid;
       }

@@ -31,7 +31,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   bool _textContainsText = false;
   bool _camera = false;
   bool _online;
-  Timer _timer;
 
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
@@ -45,7 +44,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     _service = MessageService(widget.id);
     loadCameras();
     _online = false;
-    _timer = Timer.periodic(Duration(minutes: 1), (timer) => onlineState());
     onlineState();
   }
 
@@ -53,10 +51,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   void dispose()
   {
     super.dispose();
-    if(_timer != null)
-    {
-      _timer.cancel();
-    }
     _controller.dispose();
     _service.onClose();
     _scrollController.dispose();
@@ -93,11 +87,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
       0.0,
       duration: Duration(milliseconds: 250),
       curve: Curves.linear);
-  }
-
-  void onMessageDoubleTap(int timestamp, bool liked)
-  {
-    //_service.likeMessage(timestamp, liked);
   }
 
   void onCameraDismissed()
@@ -241,6 +230,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
             {
               value.length > 0 ? _textContainsText = true : _textContainsText = false;
             });
+            _service.setWriting(_textContainsText ? true : false);
           },
         ),
       ),
@@ -367,56 +357,87 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
         stream: _service.stream,
         builder: (context, snapshot)
         {
-        return snapshot.data != null ? ListView(
-          reverse: true,
-          controller: _scrollController,
-          physics: BouncingScrollPhysics(),
-          children: [
-            CustomScrollView(
-              physics: BouncingScrollPhysics(),
-              shrinkWrap: true,
-              slivers:[
-                SliverList(
-                  delegate: SliverChildListDelegate(
-                    List.generate(snapshot.data.length, (index)
-                    {
-                      ChatModel model = snapshot.data[index];
-                      bool showImage = false;
-                      if(index != snapshot.data.length-1)
+          return snapshot.data != null ? ListView(
+            reverse: true,
+            controller: _scrollController,
+            physics: BouncingScrollPhysics(),
+            children: [
+              CustomScrollView(
+                physics: BouncingScrollPhysics(),
+                shrinkWrap: true,
+                slivers:[
+                  SliverList(
+                    delegate: SliverChildListDelegate(
+                      List.generate(snapshot.data.length, (index)
                       {
-                        if(snapshot.data[index+1].from() == Auth.getUserID() && model.from() != Auth.getUserID())
+                        ChatModel model = snapshot.data[index];
+                        bool showImage = false;
+                        bool showTime = false;
+                        if(index != snapshot.data.length-1)
                         {
-                          // letzte nachricht vom anderen user
-                          showImage = true;
+                          if(snapshot.data[index+1].from() == Auth.getUserID() && model.from() != Auth.getUserID())
+                          {
+                            // letzte nachricht vom anderen user
+                            showImage = true;
+                          }
                         }
-                      }
-                      else
-                      {
-                        if(model.from() != Auth.getUserID())
-                        { 
-                          showImage = true;
+                        else
+                        {
+                          if(model.from() != Auth.getUserID())
+                          { 
+                            showImage = true;
+                          }
                         }
-                      }
-                      if(model.type() == 0)
-                      {
-                        return ChatMessage(model, onMessageDoubleTap, 1, showImage, widget._imageRef);
-                      }
-                      else if(model.type() == 1)
-                      {
-                        return ChatImage(model);
-                      }
-                      return Container();
-                      }
+                        if(index > 0)
+                        {
+                          if(snapshot.data[index-1].timestamp() - snapshot.data[index].timestamp() < -600000)
+                          {
+                            showTime = true;
+                          }
+                        }
+                        else
+                        {
+                          showTime = true;
+                        }
+                        
+                        if(model.type() == 0)
+                        {
+                          return ChatMessage(model, 1, showImage, widget._imageRef, showTime);
+                        }
+                        else if(model.type() == 1)
+                        {
+                          return ChatImage(model);
+                        }
+                        return Container();
+                        }
+                      ),
                     ),
-                  ),
-                )
-                
-              ]
-            )
-          ],
-        ) : Container();
+                  )
+                  
+                ]
+              )
+            ],
+          ) : Container();
         }
       )
+    );
+  }
+
+  Widget getWritingWidget()
+  {
+    return StreamBuilder(
+      stream: _service.getPeerStream(),
+      builder: (context, snapshot)
+      {
+        if(snapshot.hasData)
+        {
+          if(snapshot.data["writing"] == Auth.getUserID())
+          {
+            return Text("Writing...");
+          }
+        }
+        return Container();
+      }
     );
   }
 
@@ -426,6 +447,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     return Column(
       children: <Widget>[
       getChatColumn(),
+      getWritingWidget(),
       getBottomBody(),
       ],
     );

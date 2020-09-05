@@ -1,22 +1,21 @@
 import 'package:chatapp/models/chat_model.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class ChatMessage extends StatefulWidget 
 {
 
-  int _index;
+  final int _index;
 
-  ChatModel _ref;
+  final ChatModel _ref;
 
-  bool _showImage;
+  final bool _showImage;
 
-  Function _onDoubleClick;
+  final String _profileImage;
 
-  String _profileImage;
+  final bool _showTime;
 
-  ChatMessage(this._ref, this._onDoubleClick, this._index, this._showImage, this._profileImage);
+  ChatMessage(this._ref, this._index, this._showImage, this._profileImage, this._showTime);
 
   @override
   _ChatMessageState createState() => _ChatMessageState();
@@ -25,7 +24,6 @@ class ChatMessage extends StatefulWidget
 class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
 {
   bool _right;
-  bool _liked;
   bool _received;
 
   @override
@@ -33,7 +31,6 @@ class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
   {
     super.initState();
     _right = widget._ref.from() == Auth.getUserID();
-    _liked = widget._ref.liked();
     _received = widget._ref.received();
   }
 
@@ -41,24 +38,22 @@ class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
 
   Widget getChatContainer()
   {
-    DateTime time = DateTime.fromMillisecondsSinceEpoch(widget._ref.timestamp());
-
-    return  Container(
-      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width*0.7),
-      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
-      decoration: BoxDecoration(
-        borderRadius:BorderRadius.circular(20),
-          color: _right ? Color(0xff0079ff) : Color(0xffeeeeee),
-        ),
-        child: Text(
-          widget._ref.type() == 0 ? widget._ref.content() : "Image", 
-          style: TextStyle(
-            color: _right ? Colors.white : Colors.black,
-            fontSize: 18
-          ),
-          softWrap: true,
-        ),
-    );
+    return Container(
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width*0.7),
+        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+        decoration: BoxDecoration(
+    borderRadius:BorderRadius.circular(20),
+      color: _right ? Color(0xff0079ff) : Color(0xffeeeeee),
+    ),
+    child: Text(
+      widget._ref.type() == 0 ? widget._ref.content() : "Image", 
+      style: TextStyle(
+        color: _right ? Colors.white : Colors.black,
+        fontSize: 18
+      ),
+      softWrap: true,
+    ),
+      );
   }
 
   Widget getReadText()
@@ -76,42 +71,58 @@ class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
     );
   }
 
+  Widget getTimeText()
+  {
+    DateTime time = DateTime.fromMillisecondsSinceEpoch(widget._ref.timestamp());
+    String minute = time.minute.toString();
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          time.hour.toString() + ":" + (minute.length < 2 ? "0" + minute : minute),
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey
+          ),
+        )
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) 
   {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(widget._showImage ? 0 : 36, 1, 8, 1),
-      child: Row(
-        mainAxisAlignment: !_right ? MainAxisAlignment.start : MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          widget._showImage ? Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 4, 0),
-            child: CircleAvatar(
-              radius: 12,
-              backgroundImage: NetworkImage(
-                widget._profileImage
-              )
-            ),
-          ) : Container(),
-          Column(
+    return Column(
+      children: [
+        widget._showTime ? getTimeText() : Container(),
+        widget._showTime ? SizedBox(height: 10,) : Container(),
+        Padding(
+          padding: EdgeInsets.fromLTRB(widget._showImage ? 0 : 36, 1, 8, 1),
+          child: Row(
+            mainAxisAlignment: !_right ? MainAxisAlignment.start : MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              GestureDetector(
-                onDoubleTap: () 
-                {
-                  _liked = !_liked;
-                  widget._onDoubleClick(widget._ref.timestamp(), _liked);
-                  HapticFeedback.vibrate();
-                },
-               child: getChatContainer()
-              ),
-              _received && widget._index == 0 && widget._ref.from() == Auth.getUserID() ? getReadText() : Container() 
+              widget._showImage ? Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 4, 0),
+                child: CircleAvatar(
+                  radius: 12,
+                  backgroundImage: NetworkImage(
+                    widget._profileImage
+                  )
+                ),
+              ) : Container(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  getChatContainer(),
+                  _received && widget._index == 0 && widget._ref.from() == Auth.getUserID() ? getReadText() : Container() 
+                ],
+              )
+              
             ],
-          )
-          
-        ],
-      )
+          ),
+        )
+      ],
     );
   }
 }

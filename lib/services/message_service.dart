@@ -1,14 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:chatapp/models/chat_model.dart';
 import 'package:chatapp/services/authentication.dart';
+import 'package:chatapp/services/file_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 
 class MessageService 
 {
@@ -16,20 +14,21 @@ class MessageService
   String _peerID;
   String _chatID;
   ImagePicker _imagePicker;
-  File _file;
+  FileService _fileService;
   StreamController<List<ChatModel>> _controller = StreamController();
   bool _closed = false;
   List<ChatModel> _messages = List();
-  int _lastMessageTime = 0;
   
 
   MessageService(this._peerID)
   {
     _imagePicker = ImagePicker();
     _getChatId();
-    createFile().then((value)
+    _fileService = FileService("${Auth.getUserID()}$_peerID");
+    _fileService.createFile().then((value)
     {
-      readFile();
+      _messages = _fileService.readFile();
+      _controller.sink.add(_messages);
       listen();
     });
   }
@@ -39,7 +38,7 @@ class MessageService
   void onClose()
   {
     _closed = true;
-    writeToFile();
+    _fileService.writeToFile(_messages);
     _controller.close();
   }
 
@@ -49,32 +48,22 @@ class MessageService
     {
       getStream().listen((event) 
       { 
+        List<ChatModel> models = List();
         for(int counter = 0; counter < event.documents.length; counter++)
         {
           ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
-          if(model.from() != Auth.getUserID())
+          if(model.from() != Auth.getUserID() && !_messages.contains(model))
           {
-            deleteMessage(model.timestamp());
+            models.add(model);
             _messages.add(model);
-            _controller.sink.add(_messages);
-            _lastMessageTime = model.timestamp();
           }
         }
-        
+        _controller.sink.add(_messages);
+        deleteMessage();
       });
     }
   }
 
-  Future<void> createFile() async
-  {
-    var path = await getApplicationDocumentsDirectory();
-    String filepath = p.join(path.path, _peerID + ".json");
-    _file = new File(filepath);
-    if(!await _file.exists())
-    {
-      _file.writeAsStringSync(json.encode(new List()));
-    }
-  }
 
   void _getChatId()
   {
@@ -88,48 +77,19 @@ class MessageService
       _chatID = '' + (id.hashCode - _peerID.hashCode).toString();
     }
   }
-
-  void writeToFile()
-  {
-    try
-    {
-      List<Map<String, dynamic>> jsonString = List();
-      _messages.forEach((element) 
-      { 
-        jsonString.add(element.toJson());
-      });
-      _file.writeAsStringSync(json.encode(jsonString)); 
-    }
-    catch(e)
-    { 
-      print(e);
-    }
-  }
   
-  Future<void> deleteMessage(int timestamp) async
+  void deleteMessage()
   {
-    await Firestore.instance.collection("chats").document(_chatID).collection("messages").document(timestamp.toString()).delete();
+    Firestore.instance.collection("chats").document(_chatID).collection("messages").getDocuments().then((value)
+    {
+      for(int counter = value.documents.length-2; counter >= 0; counter--)
+      {
+        value.documents[counter].reference.delete();
+      }
+    });
   }
 
-  void readFile() 
-  {
-    try
-    {
-      List<dynamic> jsonFileContent = json.decode( _file.readAsStringSync());
-      for(int counter = 0; counter < jsonFileContent.length; counter++)
-      {
-        _messages.add(ChatModel.fromJson(jsonFileContent[counter]));
-      }
-      _controller.sink.add(_messages);
-    }
-    catch(e)
-    {
-      print(_file);
-      print("error occured: " + e.toString());
-      // print(e);
-    }
-    
-  }
+  
 
   Stream getStream()
   {
@@ -164,7 +124,6 @@ class MessageService
         'timestamp' : DateTime.now().millisecondsSinceEpoch,
         'type' : type,
         'received' : false,
-        'liked' : false
       }
     );
   }
@@ -186,21 +145,6 @@ class MessageService
     });
   }
 
-  void likeMessage(int timestamp, bool liked)
-  {
-    Firestore.
-    instance.
-    collection("chats").
-    document(_chatID).
-    collection("messages").
-    document(timestamp.toString()).
-    updateData(
-      {
-        'liked' : liked
-      }
-    );
-  }
-
   static Stream getHomeStream(String roomID)
   {
     return Firestore.
@@ -211,6 +155,20 @@ class MessageService
     orderBy("timestamp", descending: true).
     limit(1).
     snapshots();
+  }
+
+  Stream getPeerStream()
+  {
+    return Firestore.instance.collection("users").document(_peerID).snapshots();
+  }
+
+  void setWriting(bool isWriting)
+  {
+    Firestore.instance.collection("users").document(_peerID).updateData(
+      {
+        'writing' : isWriting ? _peerID : 'null'
+      }
+    );
   }
 
   static Future<bool> getOnlineState(String id)
