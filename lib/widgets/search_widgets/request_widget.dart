@@ -3,14 +3,11 @@ import 'package:flutter/material.dart';
 
 class RequestWidget extends StatelessWidget 
 {
-  AssetImage _image;
+  final AssetImage _image;
   final String _id;
-  FriendsService _friendsService;
+  final FriendsService _friendsService = FriendsService();
 
-  RequestWidget(this._image, this._id)
-  {
-    _friendsService = FriendsService();
-  }
+  RequestWidget(this._image, this._id);
 
   @override
   Widget build(BuildContext context) 

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 class RecentSeachWidget extends StatelessWidget 
 {
-  bool _friend;
-  String _name;
-  AssetImage _profileImage;
-  bool _story;
+  final bool _friend;
+  final String _name;
+  final AssetImage _profileImage;
+  final bool _story;
 
   RecentSeachWidget(this._friend, this._name, this._profileImage, this._story);
 

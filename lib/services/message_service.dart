@@ -8,23 +8,34 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
+/// Manages messages sent and saves them to a file @file_service
+/// connect to the stream object to listen to messages
 class MessageService 
 {
   
+  /// the id of the peer
   String _peerID;
+  /// the generated chatroom-ID
   String _chatID;
+  /// iamge picker for picking images
   ImagePicker _imagePicker;
+  /// instance of FileService for writing to file
   FileService _fileService;
+  /// controller handling all new messages
   StreamController<List<ChatModel>> _controller = StreamController();
+  /// determines whether user has left chatroom
   bool _closed = false;
+  /// List of messages sent
   List<ChatModel> _messages = List();
   
-
+  /// creates a new MessageService
+  /// @required _peerID the id of the peer
   MessageService(this._peerID)
   {
     _imagePicker = ImagePicker();
     _getChatId();
-    _fileService = FileService("${Auth.getUserID()}$_peerID");
+    _fileService = FileService("${Auth.getUserID()}$_peerID", "path.txt");
+    // when create complete read file and listen for new messages
     _fileService.createFile().then((value)
     {
       _messages = _fileService.readFile();
@@ -33,8 +44,10 @@ class MessageService
     });
   }
 
+  /// get the stream containing all messages
   Stream<List<ChatModel>> get stream => _controller.stream;
 
+  /// should be called when user navigates back to home screen
   void onClose()
   {
     _closed = true;
@@ -42,29 +55,69 @@ class MessageService
     _controller.close();
   }
 
+  /// listens for new messages and adds them to _messages and _controller 
+  /// deletes all messsages except last one from firebase
   void listen()
   {
     if(!_closed)
     {
-      getStream().listen((event) 
+      Firestore.instance.collection("chats").
+      document(_chatID).
+      collection("messages").
+      snapshots().
+      listen((event) 
       { 
-        List<ChatModel> models = List();
-        for(int counter = 0; counter < event.documents.length; counter++)
+        if(event.documents.length > 0)
         {
-          ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
-          if(model.from() != Auth.getUserID() && !_messages.contains(model))
+          bool delete = true;
+          List<ChatModel> models = List();
+          for(int counter = 0; counter < event.documents.length; counter++)
           {
-            models.add(model);
-            _messages.add(model);
+            ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
+            if(model.from() == Auth.getUserID())
+            {
+              print("from suer");
+              delete = false;
+              if(_messages.length > 0)
+              {
+                ChatModel model2 = _messages.removeLast();
+                model2.setReceived(true);
+                _messages.add(model2);
+
+              }
+            }
+            if(model.from() != Auth.getUserID() && !_messages.contains(model))
+            {
+              models.add(model);
+              _messages.add(model);
+              setRead(model.timestamp());
+            }
+            if(model.type() == 1)
+            {
+              //GallerySaver.saveImage(model.content());
+            }
+          }
+          _controller.sink.add(_messages);
+          if(delete)
+          {
+            deleteMessage();
           }
         }
-        _controller.sink.add(_messages);
-        deleteMessage();
+        // else if(event.documents.length > 0 && event.documents[0]["from"] == Auth.getUserID())
+        // {
+        //   print("callled");
+        //   var models = _fileService.readFile();
+        //   for(ChatModel model in models)
+        //   {
+        //     model.setReceived(true);
+        //   }
+        //  // _controller.sink.add(models);
+        // }
       });
     }
   }
 
-
+  /// create a unique chatID
   void _getChatId()
   {
     String id = Auth.getUserID();
@@ -78,6 +131,7 @@ class MessageService
     }
   }
   
+  /// deletes all messages except the last one from firebase
   void deleteMessage()
   {
     Firestore.instance.collection("chats").document(_chatID).collection("messages").getDocuments().then((value)
@@ -88,33 +142,27 @@ class MessageService
       }
     });
   }
-
   
-
-  Stream getStream()
+  /// sets the message to read
+  void setRead(int timestamp)
   {
-    return Firestore.instance.collection("chats").
+    if(_messages.length != 0)
+    {
+      Firestore.
+      instance.
+      collection("chats").
       document(_chatID).
       collection("messages").
-      where("from", isEqualTo: _peerID).
-      snapshots();
+      document(timestamp.toString()).
+      updateData(
+        {
+          'received' : true
+        }
+      );
+    }
   }
 
-  // void setRead()
-  // {
-  //   Firestore.
-  //   instance.
-  //   collection("chats").
-  //   document(_chatID).
-  //   collection("messages").
-  //   document(_lastMessageTime.toString()).
-  //   updateData(
-  //     {
-  //       'received' : true
-  //     }
-  //   );
-  // }
-
+  /// creates a new message model containing all required data
   ChatModel _createModel(String content, int type)
   { 
     return ChatModel.fromJson(
@@ -128,6 +176,8 @@ class MessageService
     );
   }
 
+  /// called when message is sent 
+  /// add message to firebase and to _controller and _messages
   Future<void> sendMessage(String content, int type)
   {
     ChatModel model = _createModel(content, type);
@@ -145,6 +195,7 @@ class MessageService
     });
   }
 
+  /// return the stream for the home page
   static Stream getHomeStream(String roomID)
   {
     return Firestore.
@@ -157,11 +208,14 @@ class MessageService
     snapshots();
   }
 
+  /// return the stream listening to the peer data
+  /// used for checking whether peer is currently writing a new message
   Stream getPeerStream()
   {
     return Firestore.instance.collection("users").document(_peerID).snapshots();
   }
 
+  /// sets the status of the peer
   void setWriting(bool isWriting)
   {
     Firestore.instance.collection("users").document(_peerID).updateData(
@@ -169,11 +223,6 @@ class MessageService
         'writing' : isWriting ? _peerID : 'null'
       }
     );
-  }
-
-  static Future<bool> getOnlineState(String id)
-  {
-    return Firestore.instance.collection("users").document(id).get().then((value) => value["online"]); 
   }
 
   static Stream getOnlineStatus(String id)

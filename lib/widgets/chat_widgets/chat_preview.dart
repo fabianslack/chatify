@@ -1,20 +1,19 @@
-import 'dart:async';
-import 'dart:developer';
 
 import 'package:chatapp/pages/home/chat.dart';
 import 'package:chatapp/pages/home/share_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
 import 'package:chatapp/services/message_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ChatPreview extends StatefulWidget 
 {
-  var _ref;
-  String _username;
-  bool _message;
-  String _id;
+  final DocumentSnapshot _ref;
+  final String _username;
+  final bool _message;
+  final String _id;
 
   ChatPreview(this._username, this._ref, this._message, this._id);
 
@@ -24,26 +23,14 @@ class ChatPreview extends StatefulWidget
 
 class _ChatPreviewState extends State<ChatPreview> 
 {
-  
-  Timer _timer;
-
-  bool _online;
   String _imageRef;
+  bool _read;
 
   @override
   void initState() 
   {
     super.initState();
-    _online = false;
-    _timer = Timer.periodic(Duration(minutes: 1), (timer) => onlineState());
-    onlineState();
-  }
-
-  @override
-  void dispose() 
-  {
-    super.dispose();
-    _timer.cancel();
+    loadProfileImage();
   }
 
   void loadProfileImage() 
@@ -56,19 +43,11 @@ class _ChatPreviewState extends State<ChatPreview>
     });
   }
 
-  void onlineState() 
-  {
-    loadProfileImage();
-    MessageService.getOnlineState(widget._id).then((value) 
-    {
-      setState(() {
-        _online = value;
-      });
-    });
-  }
-
   void handleTap() 
   {
+    setState(() {
+      //_read = true;
+    });
     Navigator.of(context).push(CupertinoPageRoute(
       builder: (context) => ChatPage(widget._username, _imageRef, widget._id),
     ));
@@ -103,35 +82,59 @@ class _ChatPreviewState extends State<ChatPreview>
             backgroundImage: _imageRef != null ? NetworkImage(_imageRef) : AssetImage("assets/logo.png"),
             radius: 28,
           ),
-          _online ? Positioned(
-            bottom: 0.0,
-            right: 0.0,
-            child: Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white
-              ),
-              child: Center(
-                child: Container(
-                  height: 10,
-                  width: 10,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.green
+          StreamBuilder(
+            stream: MessageService.getOnlineStatus(widget._id),
+            builder: (context, snapshot)
+            {
+              if(snapshot.hasData)
+              {
+                return snapshot.data["online"] ? Positioned(
+                  bottom: 0.0,
+                  right: 0.0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white
+                    ),
+                    child: Center(
+                      child: Container(
+                        height: 10,
+                        width: 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.green
+                        )
+                      ),
+                    ),
                   )
-                ),
-              ),
-            )
-          ) : Container()
+                ) : Container();
+              }
+              return Container();
+            }
+          ) 
         ],
+      ),
+    );
+  }
+
+  Widget getNewMessageAlert()
+  {
+    return Container(
+      height: 15,
+      width: 15,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.blue
       ),
     );
   }
 
   Widget getContent()
   {
+    _read = widget._message ? widget._ref["received"] && widget._ref["from"] != Auth.getUserID() : false;
+
     DateTime time = widget._message
     ? DateTime.fromMillisecondsSinceEpoch(widget._ref["timestamp"])
     : DateTime(0);
@@ -147,38 +150,42 @@ class _ChatPreviewState extends State<ChatPreview>
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(widget._username,
-                      overflow: TextOverflow.clip,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 18,
-                        color: Colors.black
-                      )
-                    ),
-                    Text(
-                      _time,
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14
-                      )
-                    ),
-                  ],
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(widget._username,
+                    overflow: TextOverflow.clip,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                      color: Colors.black
+                    )
+                  ),
+                  Text(
+                    _time,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14
+                    )
+                  ),
+                ],
               ),
               SizedBox(height: 5,),
-              Text(
-                widget._message ? widget._ref["type"] == 0 ? widget._ref["content"] : "Image" : "",
-                overflow: TextOverflow.ellipsis,
-                style:  TextStyle(
-                  fontSize: 16, 
-                  color: Colors.grey
-                )
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget._message ? widget._ref["type"] == 0 ? widget._ref["content"] : "Image" : "",
+                    overflow: TextOverflow.ellipsis,
+                    style:  TextStyle(
+                      fontSize: 16, 
+                      fontWeight: _read ? FontWeight.normal :  FontWeight.w600,
+                      color: _read ? Colors.grey : Colors.black
+                    )
+                  ),
+                  !_read && widget._message ? getNewMessageAlert() : Container()
+                ],
               )
             ],
           ),
@@ -191,13 +198,16 @@ class _ChatPreviewState extends State<ChatPreview>
   Widget build(BuildContext context) 
   {
 
-    return GestureDetector(
-      onTap: () => handleTap(),
-      onLongPress: () => handleLongTap(),
-      child: Container(
-        height: 75,
-        child: getContent()
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(right:10.0),
+      child: GestureDetector(
+        onTap: () => handleTap(),
+        onLongPress: () => handleLongTap(),
+        child: Container(
+          height: 75,
+          child: getContent()
+          ),
+      ),
     );
   }
 }

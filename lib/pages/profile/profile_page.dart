@@ -1,6 +1,4 @@
 
-import 'package:chatapp/services/friends_service.dart';
-import 'package:chatapp/widgets/search_widgets/request_widget.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget 
@@ -11,18 +9,15 @@ class ProfilePage extends StatefulWidget
 
 class _ProfilePageState extends State<ProfilePage> 
 {
-  FriendsService _service;
 
   ScrollController _controller = ScrollController();
   double _opacity = 1.0;
-  bool _scrolling = false;
   double _lastOffset = 0.0;
 
   @override
   void initState()
   {
     super.initState();
-    _service = FriendsService();
     //_lastOffset = _controller.offset;
     _controller.addListener(() 
     {

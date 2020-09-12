@@ -7,7 +7,6 @@ import 'package:chatapp/widgets/chat_widgets/chat_preview.dart';
 import 'package:chatapp/widgets/story_wigets/status_bar_item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
 
 class Home extends StatefulWidget 
@@ -55,14 +54,14 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     RenderBox box = _searchHeightKey.currentContext.findRenderObject();
     Size size = box.size;
 
-    if(size.height < 5)
+    if(size.height == 0)
     {
       setState(() {
         _searchBarCollapsed = true;
       });
     }
 
-    if(size.height > 5 && _searchBarCollapsed)
+    if(size.height > 0 && _searchBarCollapsed)
     {
       setState(() {
         _searchBarCollapsed = false;

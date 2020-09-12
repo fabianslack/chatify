@@ -1,11 +1,9 @@
-import 'package:camera/camera.dart';
 import 'package:chatapp/pages/Root_page.dart';
 import 'package:chatapp/pages/profile/profile_page.dart';
 import 'package:chatapp/pages/authentification/splash_screen.dart';
 import 'package:chatapp/themes/theme.dart';
 import 'package:flutter/material.dart';
 import 'pages/authentification/welcome_page.dart';
-import 'services/authentication.dart';
 
 
 void main() 
@@ -27,7 +25,7 @@ class _MyAppState extends State<MyApp>
   {
     return MaterialApp(
       routes: {
-        'welcome-page': (context) => WelcomePage(new Auth()),
+        'welcome-page': (context) => WelcomePage(),
         'root-page': (context) => RootPage(),
         'profile-page': (context) => ProfilePage(),
       },

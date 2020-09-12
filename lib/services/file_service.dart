@@ -8,14 +8,17 @@ class FileService
 {
   String _path;
   File _file;
+  File _imageFile;
+  String _imageRef;
 
-  FileService(this._path);
+  FileService(this._path, this._imageRef);
 
 
   Future<void> createFile() async
   {
     var path = await getApplicationDocumentsDirectory();
     _file = new File(path.path + "/" + _path + ".json");
+    _imageFile = File(path.path + "/" +  _imageRef + ".png");
     if(!await _file.exists())
     {
       _file.writeAsStringSync(json.encode(new List()));
@@ -55,6 +58,12 @@ class FileService
       print("error occured: " + e.toString());
     }
     return messages;
+  }
+
+  void saveImageToFile()
+  {
+    //Image image = Image.from();
+    //_imageFile.writeAsBytesSync(encodePng(image));
   }
   
 }

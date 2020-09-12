@@ -16,7 +16,6 @@ class _StatusBarItemState extends State<StatusBarItem>
 {
   String _imageRef;
   String _username;
-  bool _watched = false;
 
   @override
   void initState()
@@ -48,9 +47,6 @@ class _StatusBarItemState extends State<StatusBarItem>
     return GestureDetector(
       onTap: () 
       {
-        setState(() {
-          _watched = true;
-        });
         Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => StoryViewPage(widget._id, _username) 
         ));

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:chatapp/models/chat_model.dart';
 import 'package:chatapp/pages/home/camera_page.dart';
@@ -30,7 +29,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
 
   bool _textContainsText = false;
   bool _camera = false;
-  bool _online;
+ // bool _online;
 
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
@@ -43,8 +42,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     super.initState();
     _service = MessageService(widget.id);
     loadCameras();
-    _online = false;
-    onlineState();
+
   }
 
   @override
@@ -61,20 +59,10 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     _cameras = await availableCameras();
   }
 
-  void onlineState()
-  {
-    MessageService.getOnlineState(widget.id).then((value) 
-    {
-      setState(() {
-        _online = value;
-      });
-    });
-  }
-
   void onSendClicked()
   {
     _service.sendMessage(_controller.text.trim(), 0);
-   navigateToBottom();
+    navigateToBottom();
     _controller.clear();
     setState(() {
       _textContainsText = false;
@@ -96,43 +84,13 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     });
   }
 
-  Widget getAppBar()
+  Widget getAppBarText()
   {
-    return AppBar(
-      titleSpacing: 0,
-      elevation: 0,
-      backgroundColor: Colors.white,
-      title: Row(
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(
-                new PageRouteBuilder(
-                  opaque: false,
-                  barrierDismissible:true,
-                  pageBuilder: (BuildContext context, _, __) {
-                    return Hero(
-                      tag: widget._imageRef,
-                      flightShuttleBuilder: (flightContext, animation, direction,
-                          fromContext, toContext) {
-                        return AlertDialog(
-                          content: Image.network(widget._imageRef),
-                        );
-                      },
-                      child: AlertDialog(
-                        content: Image.network(widget._imageRef),
-                      )
-                    );
-                  }
-                )
-            );
-            },
-            child: CircleAvatar(
-              backgroundImage: widget._imageRef != null ? NetworkImage(widget._imageRef) : AssetImage("assets/logo.png")
-              )
-          ),
-          SizedBox(width: 10,),
-          _online ? Column(
+    return StreamBuilder(
+      stream: _service.getPeerStream(),
+      builder: (context, snapshot)
+      {
+        return snapshot.data["online"] ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -150,16 +108,55 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
                 )
               )
             ],
-          ) : Hero(
-            tag: '_'+widget._name,
-              child: Text(
-              widget._name,
-              style: TextStyle(
-                fontSize: 24,
-                color: Colors.black
-              ),
-            ),
+          ) : Text(
+          widget._name,
+          style: TextStyle(
+            fontSize: 24,
+            color: Colors.black
           ),
+        );
+      }
+    );
+  }
+
+  Widget getAppBar()
+  {
+    return AppBar(
+      titleSpacing: 0,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      title: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                new PageRouteBuilder(
+                  opaque: false,
+                  barrierDismissible:true,
+                  pageBuilder: (BuildContext context, _, __) 
+                  {
+                    return Hero(
+                      tag: widget._imageRef,
+                      flightShuttleBuilder: (flightContext, animation, direction,
+                          fromContext, toContext) {
+                        return AlertDialog(
+                          content: Image.network(widget._imageRef),
+                        );
+                      },
+                      child: AlertDialog(
+                        content: Image.network(widget._imageRef),
+                      )
+                    );
+                  }
+                )
+              );
+            },
+            child: CircleAvatar(
+              backgroundImage: widget._imageRef != null ? NetworkImage(widget._imageRef) : AssetImage("assets/logo.png")
+              )
+          ),
+          SizedBox(width: 10,),
+          getAppBarText()
         ],
       ),
       leading: IconButton(
@@ -261,42 +258,28 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   {
     return Padding(
       padding: const EdgeInsets.fromLTRB(3, 2, 0, 2),
-      child: Container(
-        width: 37,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [
-              Colors.lightBlue[300], Colors.blue[600]
-            ]
-          )
-        ),
-        child: Center(
-          child: GestureDetector(
-            onTap: () 
-            {
-              showModalBottomSheet(
-                isScrollControlled: true,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30)
-                ),
-                context: context,
-                builder: (context)
-                {
-                  return Container(
-                    height: MediaQuery.of(context).size.height * 0.8,
-                    child: SharePage(widget.id),
-                  );
-                }
-              );
-            },
-            child: Icon(
-              Icons.add,
-              color: Colors.white,
-              size: 32,
+      child: GestureDetector(
+        onTap: () 
+        {
+          showModalBottomSheet(
+            isScrollControlled: true,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30)
             ),
-          ),
-          
+            context: context,
+            builder: (context)
+            {
+              return Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                child: SharePage(widget.id),
+              );
+            }
+          );
+        },
+        child: Icon(
+          Icons.add,
+          color: Colors.grey[700],
+          size: 32,
         ),
       ),
     );
@@ -317,7 +300,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
   Widget getBottomBody()
   {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(5, 0, 10, 5),
+      padding: const EdgeInsets.fromLTRB(5, 0, 10, 10),
       child: Container(
         height: 50,
         width: double.infinity,
@@ -330,7 +313,8 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
                 padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
                 decoration: BoxDecoration(
                   border: Border.all(
-                      color: Colors.grey[200]
+                      color: Colors.grey[200],
+                      width: 2
                   ),
                   borderRadius: BorderRadius.circular(30)
                 ),
@@ -358,66 +342,55 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
         builder: (context, snapshot)
         {
           return snapshot.data != null ? ListView(
-            reverse: true,
-            controller: _scrollController,
-            physics: BouncingScrollPhysics(),
-            children: [
-              CustomScrollView(
-                physics: BouncingScrollPhysics(),
-                shrinkWrap: true,
-                slivers:[
-                  SliverList(
-                    delegate: SliverChildListDelegate(
-                      List.generate(snapshot.data.length, (index)
+          reverse: true,
+          controller: _scrollController,   
+          physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),      
+          children: [
+            CustomScrollView(
+              physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              slivers:[
+                SliverList(
+                  delegate: SliverChildListDelegate(
+                    List.generate(snapshot.data.length, (index)
+                    {
+                      ChatModel model = snapshot.data[index];
+                      bool read = false;
+                      bool showIsOwn = false;
+                      if(index == 0 )
                       {
-                        ChatModel model = snapshot.data[index];
-                        bool showImage = false;
-                        bool showTime = false;
-                        if(index != snapshot.data.length-1)
+
+                      }
+                      if(index != snapshot.data.length-1)
+                      {
+                        if(snapshot.data[index+1].from() != snapshot.data[index].from())
                         {
-                          if(snapshot.data[index+1].from() == Auth.getUserID() && model.from() != Auth.getUserID())
-                          {
-                            // letzte nachricht vom anderen user
-                            showImage = true;
-                          }
+                          showIsOwn = true;
                         }
-                        else
-                        {
-                          if(model.from() != Auth.getUserID())
-                          { 
-                            showImage = true;
-                          }
-                        }
-                        if(index > 0)
-                        {
-                          if(snapshot.data[index-1].timestamp() - snapshot.data[index].timestamp() < -600000)
-                          {
-                            showTime = true;
-                          }
-                        }
-                        else
-                        {
-                          showTime = true;
-                        }
-                        
-                        if(model.type() == 0)
-                        {
-                          return ChatMessage(model, 1, showImage, widget._imageRef, showTime);
-                        }
-                        else if(model.type() == 1)
-                        {
-                          return ChatImage(model);
-                        }
-                        return Container();
-                        }
-                      ),
+                      }
+                      if(index == snapshot.data.length -1)
+                      {
+                        showIsOwn = true;
+                      }
+                      if(model.type() == 0)
+                      {
+                        return ChatMessage(model, showIsOwn, true);
+                      }
+                      else if(model.type() == 1)
+                      {
+                        return ChatImage(model);
+                      }
+                      return Container();
+                      }
                     ),
-                  )
-                  
-                ]
-              )
-            ],
-          ) : Container();
+                  ),
+                )
+                
+              ]
+            )
+          ],
+            )  : Container();
+        
         }
       )
     );

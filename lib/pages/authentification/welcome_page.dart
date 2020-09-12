@@ -1,22 +1,18 @@
 import 'dart:math';
 
 import 'package:chatapp/pages/authentification/signin_page.dart';
-import 'package:chatapp/services/authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:liquid_swipe/liquid_swipe.dart';
 
 import 'signup_page.dart';
-import 'signup_page.dart';
 
-class WelcomePage extends StatefulWidget {
-  final Auth _auth;
-  WelcomePage(this._auth);
+class WelcomePage extends StatefulWidget 
+{
   @override
   _WelcomePageState createState() => _WelcomePageState();
 }
 
 class _WelcomePageState extends State<WelcomePage> {
-  final _formKey = new GlobalKey<FormState>();
 
   LiquidController liquidController = new LiquidController();
   double _height;

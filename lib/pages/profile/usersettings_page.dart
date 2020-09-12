@@ -1,12 +1,8 @@
-import 'dart:io';
-
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/db_handler.dart';
 import 'package:chatapp/services/storage_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
@@ -15,8 +11,6 @@ class ProfileSettingsPage extends StatefulWidget {
 }
 
 class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
-      new GlobalKey<RefreshIndicatorState>();
   String mail, username, password;
 
   Future<void> placeholder() async {
@@ -26,15 +20,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   Future<void> getImage() async {
     var image = await ImagePicker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
-    File croppedImage = await ImageCropper.cropImage(
-        sourcePath: image.path,
-        maxWidth: 1080,
-        maxHeight: 1080,
-        aspectRatioPresets: [CropAspectRatioPreset.square]);
-    if (croppedImage != null) {
-      image = croppedImage;
-      setState(() {});
-    }
+
     Storage().setUserImage(image.path);
     setState(() {});
     Future.delayed(Duration(seconds: 2), () {

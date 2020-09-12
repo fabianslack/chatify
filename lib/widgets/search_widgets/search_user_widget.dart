@@ -7,8 +7,8 @@ class SearchUserWidget extends StatefulWidget
 {
   final String _username;
   final AssetImage _image;
-  bool _added;
   final String id;
+  final bool _added;
   SearchUserWidget(this._username, this._image, this._added, this.id);
   @override
   _SearchUserWidgetState createState() => _SearchUserWidgetState();
@@ -16,6 +16,7 @@ class SearchUserWidget extends StatefulWidget
 
 class _SearchUserWidgetState extends State<SearchUserWidget> 
 {
+  bool _added;
   double height;
   double width;
 
@@ -27,6 +28,7 @@ class _SearchUserWidgetState extends State<SearchUserWidget>
 
   _SearchUserWidgetState()
   {
+    _added = widget._added;
     _service = FriendsService();
     if(_recentSearches == null)
     {
@@ -38,7 +40,7 @@ class _SearchUserWidgetState extends State<SearchUserWidget>
   {
     setState(() 
     {
-      widget._added = !widget._added;
+      _added = !_added;
     });
     if(_recentSearches.length > 7)
     {

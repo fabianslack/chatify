@@ -1,6 +1,5 @@
 import 'package:chatapp/themes/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:photo_view/photo_view.dart';
 
 class FullPhoto extends StatelessWidget {
   final String url;
@@ -43,6 +42,9 @@ class FullPhotoScreenState extends State<FullPhotoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(child: PhotoView(imageProvider: NetworkImage(url)));
+    return Container(child: Expanded(
+      child: Image.network(url)
+      )
+    );
   }
 }

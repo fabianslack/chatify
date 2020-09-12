@@ -50,4 +50,9 @@ class ChatModel
   int type() => _type;
   String content() => _content;
   bool received() => _received;
+
+  void setReceived(bool received)
+  {
+    _received = received;
+  }
 }
