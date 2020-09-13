@@ -23,10 +23,10 @@ class MessageService
   FileService _fileService;
   /// controller handling all new messages
   StreamController<List<ChatModel>> _controller = StreamController();
-  /// determines whether user has left chatroom
-  bool _closed = false;
   /// List of messages sent
   List<ChatModel> _messages = List();
+
+  StreamSubscription _streamSubscription;
   
   /// creates a new MessageService
   /// @required _peerID the id of the peer
@@ -41,6 +41,7 @@ class MessageService
       _messages = _fileService.readFile();
       _controller.sink.add(_messages);
       listen();
+      //listenReadStatus();
     });
   }
 
@@ -50,8 +51,8 @@ class MessageService
   /// should be called when user navigates back to home screen
   void onClose()
   {
-    _closed = true;
     _fileService.writeToFile(_messages);
+    _streamSubscription.cancel();
     _controller.close();
   }
 
@@ -59,62 +60,39 @@ class MessageService
   /// deletes all messsages except last one from firebase
   void listen()
   {
-    if(!_closed)
-    {
-      Firestore.instance.collection("chats").
-      document(_chatID).
-      collection("messages").
-      snapshots().
-      listen((event) 
-      { 
-        if(event.documents.length > 0)
+    print("event");
+    _streamSubscription = Firestore.instance.collection("chats").
+    document(_chatID).
+    collection("messages").
+    where("from", isEqualTo: _peerID).
+    snapshots().
+    listen((event) 
+    { 
+      if(event.documents.length > 0 && event.documents != null)
+      {
+        for(int counter = 0; counter < event.documents.length; counter++)
         {
-          bool delete = true;
-          List<ChatModel> models = List();
-          for(int counter = 0; counter < event.documents.length; counter++)
+          ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
+          if(!_messages.contains(model) && model.type() != 3)
           {
-            ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
-            if(model.from() == Auth.getUserID())
-            {
-              print("from suer");
-              delete = false;
-              if(_messages.length > 0)
-              {
-                ChatModel model2 = _messages.removeLast();
-                model2.setReceived(true);
-                _messages.add(model2);
-
-              }
-            }
-            if(model.from() != Auth.getUserID() && !_messages.contains(model))
-            {
-              models.add(model);
               _messages.add(model);
-              setRead(model.timestamp());
-            }
-            if(model.type() == 1)
-            {
-              //GallerySaver.saveImage(model.content());
-            }
           }
-          _controller.sink.add(_messages);
-          if(delete)
+          else if(model.type() == 3)
           {
-            deleteMessage();
+            if(_messages.length > 0)
+            {
+              ChatModel model = _messages.removeLast();
+              model.setRead(true);
+              _messages.add(model);
+            }
           }
         }
-        // else if(event.documents.length > 0 && event.documents[0]["from"] == Auth.getUserID())
-        // {
-        //   print("callled");
-        //   var models = _fileService.readFile();
-        //   for(ChatModel model in models)
-        //   {
-        //     model.setReceived(true);
-        //   }
-        //  // _controller.sink.add(models);
-        // }
-      });
-    }
+        _controller.sink.add(_messages);
+        deleteMessage();
+        sendMessage("content", 3);
+      }
+    });
+    
   }
 
   /// create a unique chatID
@@ -136,30 +114,11 @@ class MessageService
   {
     Firestore.instance.collection("chats").document(_chatID).collection("messages").getDocuments().then((value)
     {
-      for(int counter = value.documents.length-2; counter >= 0; counter--)
+      for(int counter = 0; counter < value.documents.length; counter++)
       {
         value.documents[counter].reference.delete();
       }
     });
-  }
-  
-  /// sets the message to read
-  void setRead(int timestamp)
-  {
-    if(_messages.length != 0)
-    {
-      Firestore.
-      instance.
-      collection("chats").
-      document(_chatID).
-      collection("messages").
-      document(timestamp.toString()).
-      updateData(
-        {
-          'received' : true
-        }
-      );
-    }
   }
 
   /// creates a new message model containing all required data
@@ -171,7 +130,20 @@ class MessageService
         'content' : content,
         'timestamp' : DateTime.now().millisecondsSinceEpoch,
         'type' : type,
-        'received' : false,
+        'read' : false
+      }
+    );
+  }
+
+  ChatModel createModelRead()
+  {
+    return ChatModel.fromJson(
+      {
+        'from' : Auth.getUserID(),
+        'content' : "",
+        'type' : 3,
+        'read' : true,
+        'timestamp' : DateTime.now().millisecondsSinceEpoch
       }
     );
   }
@@ -180,7 +152,15 @@ class MessageService
   /// add message to firebase and to _controller and _messages
   Future<void> sendMessage(String content, int type)
   {
-    ChatModel model = _createModel(content, type);
+    ChatModel model;
+    if(type == 3)
+    {
+      model = createModelRead();
+    }
+    else
+    {
+      model = _createModel(content, type);
+    }
     var docRef = Firestore.
       instance.
       collection("chats").

@@ -127,6 +127,9 @@ class _SignInPageState extends State<SignInPage>
           TextField(
             controller: _controller,
             autofocus: true,
+            style: TextStyle(
+              color: Colors.black
+            ),
             onChanged: (value)
             {
               setState(() 

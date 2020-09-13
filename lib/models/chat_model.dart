@@ -4,9 +4,13 @@ class ChatModel
   int _timestamp;
   String _from;
   int _type;
-  bool _received;
 
-  ChatModel(this._content, this._timestamp, this._from, this._type, this._received);
+  bool _read;
+
+  ChatModel(this._content, this._timestamp, this._from, this._type)
+  {
+    _read = false;
+  }
 
   ChatModel.fromDocumentSnapshot(var ref)
   {
@@ -14,7 +18,7 @@ class ChatModel
     _timestamp = ref["timestamp"];
     _from = ref["from"];
     _type = ref["type"];
-    _received = ref["received"];
+    _read = false;
   }
 
   ChatModel.fromJson(Map<String, dynamic> json)
@@ -23,7 +27,7 @@ class ChatModel
     _timestamp = json["timestamp"];
     _from = json["from"];
     _type = json["type"];
-    _received = json["received"];
+    _read = json["read"];
   }
 
   Map<String, dynamic> toJson() =>
@@ -32,7 +36,7 @@ class ChatModel
     'timestamp' : _timestamp,
     'from' : _from,
     'type' : _type,
-    'received' : _received
+    'read' : _read
   };
 
   bool operator ==(o)
@@ -45,14 +49,14 @@ class ChatModel
     return _content.hashCode * _timestamp.hashCode;
   }
 
+  void setRead(bool read)
+  {
+    _read = read;
+  }
+
   String from() => _from;
   int timestamp() => _timestamp;
   int type() => _type;
   String content() => _content;
-  bool received() => _received;
-
-  void setReceived(bool received)
-  {
-    _received = received;
-  }
+  bool read() => _read;
 }

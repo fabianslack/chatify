@@ -183,43 +183,22 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     return Expanded(
       child: Container(
         padding: EdgeInsets.only(left: 10),
-        child: TextField(
+        child: TextFormField(
           keyboardType: TextInputType.multiline,
           maxLines: null,
           style: TextStyle(
-            color: Colors.black,
-            fontSize: 22
+            color: Colors.grey[700],
+            fontSize: 18
           ),
           controller: _controller,
           decoration: InputDecoration(
             isDense: true,
-            focusedBorder: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            errorBorder: InputBorder.none,
-            disabledBorder: InputBorder.none,
+            border: InputBorder.none,
             hintText: 'Chat ...',
             hintStyle: TextStyle(
-              color: Colors.black,
-              fontSize: 22
+              color: Colors.grey[500],
+              fontSize: 18
             ),
-            suffixIcon: !_textContainsText ? Container() : GestureDetector(
-              onTap: () => onSendClicked(),
-              child: Container(
-                height: 30,
-                width: 55,
-                padding: const EdgeInsets.only(right: 10),
-                child: Center(
-                  child: Text(
-                    "Send",
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18
-                    ),
-                  ),
-                ),
-              ),
-            )
           ),
           onChanged: (value)
           {
@@ -229,7 +208,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
             });
             _service.setWriting(_textContainsText ? true : false);
           },
-        ),
+        )
       ),
     );
   }
@@ -285,6 +264,28 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     );
   }
 
+  Widget getSendButton()
+  {
+    return !_textContainsText ? Container(width: 0,) : GestureDetector(
+      onTap: () => onSendClicked(),
+      child: Container(
+        height: 30,
+        width: 55,
+        padding: const EdgeInsets.only(right: 10),
+        child: Center(
+          child: Text(
+            "Send",
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+              fontSize: 18
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget getAudioButton()
   {
     return !_textContainsText ? GestureDetector(
@@ -322,8 +323,8 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
                 child: Row(
                   children: [
                       getTextField(),
-                      getAudioButton(),
-                      getCameraIcon()
+                      _textContainsText ? getSendButton() : getAudioButton(),
+                      !_textContainsText ? getCameraIcon() : Container()
                   ],
                 ) ,
               ),
@@ -355,12 +356,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
                     List.generate(snapshot.data.length, (index)
                     {
                       ChatModel model = snapshot.data[index];
-                      bool read = false;
                       bool showIsOwn = false;
-                      if(index == 0 )
-                      {
-
-                      }
                       if(index != snapshot.data.length-1)
                       {
                         if(snapshot.data[index+1].from() != snapshot.data[index].from())
@@ -374,7 +370,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
                       }
                       if(model.type() == 0)
                       {
-                        return ChatMessage(model, showIsOwn, true);
+                        return ChatMessage(model, showIsOwn);
                       }
                       else if(model.type() == 1)
                       {

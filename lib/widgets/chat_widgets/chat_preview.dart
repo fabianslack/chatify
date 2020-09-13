@@ -133,7 +133,8 @@ class _ChatPreviewState extends State<ChatPreview>
 
   Widget getContent()
   {
-    _read = widget._message ? widget._ref["received"] && widget._ref["from"] != Auth.getUserID() : false;
+  //  _read = widget._message ? widget._ref["received"] && widget._ref["from"] != Auth.getUserID() : false;
+    _read = true;
 
     DateTime time = widget._message
     ? DateTime.fromMillisecondsSinceEpoch(widget._ref["timestamp"])
@@ -180,11 +181,11 @@ class _ChatPreviewState extends State<ChatPreview>
                     overflow: TextOverflow.ellipsis,
                     style:  TextStyle(
                       fontSize: 16, 
-                      fontWeight: _read ? FontWeight.normal :  FontWeight.w600,
-                      color: _read ? Colors.grey : Colors.black
+                      fontWeight: !_read ? FontWeight.normal :  FontWeight.w600,
+                      color: !_read ? Colors.grey : Colors.black
                     )
                   ),
-                  !_read && widget._message ? getNewMessageAlert() : Container()
+                  _read && widget._message ? getNewMessageAlert() : Container()
                 ],
               )
             ],

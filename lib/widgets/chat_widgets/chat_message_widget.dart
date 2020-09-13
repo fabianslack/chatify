@@ -9,12 +9,9 @@ class ChatMessage extends StatefulWidget
 
   final ChatModel _ref;
 
-  final bool _read;
-
-
   final bool _showIsOwn;
 
-  ChatMessage(this._ref, this._showIsOwn, this._read);
+  ChatMessage(this._ref, this._showIsOwn);
 
   @override
   _ChatMessageState createState() => _ChatMessageState();
@@ -30,8 +27,9 @@ class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
   {
     super.initState();
     _right = widget._ref.from() == Auth.getUserID();
-    _received = widget._ref.received() && widget._ref.from() == Auth.getUserID();
-    print(widget._ref.received());
+   // _received = widget._ref.received() && widget._ref.from() == Auth.getUserID();
+    _received = widget._ref.read() && widget._ref.from() == Auth.getUserID();
+   //_received = false;
   }
   
   String buildTimeStamp()
@@ -170,8 +168,8 @@ class CustomChatBubble extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    // TODO: implement shouldRepaint
+  bool shouldRepaint(CustomPainter oldDelegate) 
+  {
     return true;
   }
 }
