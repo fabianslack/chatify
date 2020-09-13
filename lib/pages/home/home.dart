@@ -93,13 +93,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     });
   }
 
-  void handleLogOut() async
-  {
-    _auth.setOnlineStatus(false);
-    await _auth.signOut();
-    FocusScope.of(context).unfocus();
-    Navigator.pushReplacementNamed(context, 'welcome-page');
-  }
+
 
   String getChatRoomId(String id)
   {
@@ -330,7 +324,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
                     getStoryRow(),
                     SizedBox(height: 10,),
                     getChats(),
-                    getLogoutButton(),
                   ],
                 ),
               );
@@ -343,14 +336,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     );
   }
   
-  Widget getLogoutButton() 
-  {
-    return FlatButton(
-      color: Colors.blue,
-      child: Text("logout"),
-      onPressed: handleLogOut,
-    );
-  }
+  
 
   Widget appBar()
   {
