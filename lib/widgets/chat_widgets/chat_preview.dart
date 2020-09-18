@@ -65,7 +65,7 @@ class _ChatPreviewState extends State<ChatPreview>
       {
         return Container(
           height: MediaQuery.of(context).size.height * 0.8,
-          child: SharePage(widget._id),
+         // child: SharePage(widget._id),
         );
       }
     );

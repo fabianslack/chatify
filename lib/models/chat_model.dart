@@ -7,18 +7,13 @@ class ChatModel
 
   bool _read;
 
-  ChatModel(this._content, this._timestamp, this._from, this._type)
-  {
-    _read = false;
-  }
-
   ChatModel.fromDocumentSnapshot(var ref)
   {
      _content = ref["content"];
     _timestamp = ref["timestamp"];
     _from = ref["from"];
     _type = ref["type"];
-    _read = false;
+
   }
 
   ChatModel.fromJson(Map<String, dynamic> json)
@@ -27,7 +22,6 @@ class ChatModel
     _timestamp = json["timestamp"];
     _from = json["from"];
     _type = json["type"];
-    _read = json["read"];
   }
 
   Map<String, dynamic> toJson() =>
@@ -36,7 +30,6 @@ class ChatModel
     'timestamp' : _timestamp,
     'from' : _from,
     'type' : _type,
-    'read' : _read
   };
 
   bool operator ==(o)
@@ -49,14 +42,25 @@ class ChatModel
     return _content.hashCode * _timestamp.hashCode;
   }
 
+
   void setRead(bool read)
   {
     _read = read;
+  }
+
+  void setContent(String content)
+  {
+    _content = content;
+  }
+
+  void setType(int newType)
+  {
+    _type = newType;
   }
 
   String from() => _from;
   int timestamp() => _timestamp;
   int type() => _type;
   String content() => _content;
-  bool read() => _read;
+  bool read() => _read == null ? false : _read;
 }

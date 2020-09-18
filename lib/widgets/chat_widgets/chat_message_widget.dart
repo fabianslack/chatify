@@ -11,7 +11,9 @@ class ChatMessage extends StatefulWidget
 
   final bool _showIsOwn;
 
-  ChatMessage(this._ref, this._showIsOwn);
+  final bool _showRead;
+
+  ChatMessage(this._ref, this._showIsOwn, this._showRead);
 
   @override
   _ChatMessageState createState() => _ChatMessageState();
@@ -20,16 +22,12 @@ class ChatMessage extends StatefulWidget
 class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
 {
   bool _right;
-  bool _received;
 
   @override
   void initState()
   {
     super.initState();
     _right = widget._ref.from() == Auth.getUserID();
-   // _received = widget._ref.received() && widget._ref.from() == Auth.getUserID();
-    _received = widget._ref.read() && widget._ref.from() == Auth.getUserID();
-   //_received = false;
   }
   
   String buildTimeStamp()
@@ -64,7 +62,7 @@ class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
                     ),
                   ),
                   TextSpan(
-                    text: buildTimeStamp() + "  ",
+                    text: buildTimeStamp().substring(0, 4),
                     style: TextStyle(
                       color: Colors.transparent
                     )
@@ -83,11 +81,6 @@ class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
                     fontWeight: FontWeight.w500,
                     color: _right ? Colors.white : Colors.black
                   ),
-                ),
-                Icon(
-                  _received && widget._ref.from() == Auth.getUserID() ?  Icons.done_all : Icons.done,
-                  color: _right ? Colors.white : Colors.black,
-                  size: 14,
                 )
               ],
             ),
@@ -119,6 +112,17 @@ class _ChatMessageState extends State<ChatMessage> with TickerProviderStateMixin
                     child: getChatContainer(),
                   ) :
                   getChatContainer(),
+                  widget._ref.read() && widget._showRead && widget._ref.from() == Auth.getUserID() ? Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 2, 12, 2),
+                    child: Text(
+                      "Read",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600
+                      ),
+                    ),
+                  ) : Container()
                 ],
               ),
              

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:http/http.dart';
 
 import 'package:chatapp/models/chat_model.dart';
 import 'package:path_provider/path_provider.dart';
@@ -60,10 +61,13 @@ class FileService
     return messages;
   }
 
-  void saveImageToFile()
+  Future<String> saveImageToFile(ChatModel model) async
   {
-    //Image image = Image.from();
-    //_imageFile.writeAsBytesSync(encodePng(image));
+    var response = await get(model.content());
+    var doc = await getApplicationDocumentsDirectory();
+    File file = File(doc.path + '${model.timestamp()}.png');
+    file.writeAsBytesSync(response.bodyBytes);
+    return file.path;
   }
   
 }

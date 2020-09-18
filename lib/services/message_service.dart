@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:chatapp/models/chat_model.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/file_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 
 /// Manages messages sent and saves them to a file @file_service
@@ -25,8 +26,11 @@ class MessageService
   StreamController<List<ChatModel>> _controller = StreamController();
   /// List of messages sent
   List<ChatModel> _messages = List();
+  List<ChatModel> _images = List();
 
   StreamSubscription _streamSubscription;
+  StreamSubscription _streamReadSubscription;
+
   
   /// creates a new MessageService
   /// @required _peerID the id of the peer
@@ -41,7 +45,7 @@ class MessageService
       _messages = _fileService.readFile();
       _controller.sink.add(_messages);
       listen();
-      //listenReadStatus();
+      listenRead();
     });
   }
 
@@ -51,48 +55,77 @@ class MessageService
   /// should be called when user navigates back to home screen
   void onClose()
   {
+
+    _messages.forEach((element) 
+    { 
+      if(element.type() == 2)
+      {
+        _fileService.saveImageToFile(element).then((value)
+        {
+          element.setContent(value);
+          element.setType(1);
+        });
+      }
+    });
+    _images.forEach((element) {deleteImage(element.content());});
     _fileService.writeToFile(_messages);
     _streamSubscription.cancel();
+    _streamReadSubscription.cancel();
     _controller.close();
   }
+
 
   /// listens for new messages and adds them to _messages and _controller 
   /// deletes all messsages except last one from firebase
   void listen()
   {
-    print("event");
     _streamSubscription = Firestore.instance.collection("chats").
     document(_chatID).
     collection("messages").
     where("from", isEqualTo: _peerID).
     snapshots().
-    listen((event) 
-    { 
+    listen((event) async
+    {   
       if(event.documents.length > 0 && event.documents != null)
       {
         for(int counter = 0; counter < event.documents.length; counter++)
         {
           ChatModel model = ChatModel.fromDocumentSnapshot(event.documents[counter]);
-          if(!_messages.contains(model) && model.type() != 3)
+          if(model.type() == 2 && !_messages.contains(model))
           {
-              _messages.add(model);
+            _messages.add(model);
+            _images.add(model);
+            GallerySaver.saveImage(model.content());
           }
-          else if(model.type() == 3)
+          else if(!_messages.contains(model))
           {
-            if(_messages.length > 0)
-            {
-              ChatModel model = _messages.removeLast();
-              model.setRead(true);
               _messages.add(model);
-            }
           }
         }
         _controller.sink.add(_messages);
+        setRead();
         deleteMessage();
-        sendMessage("content", 3);
       }
     });
-    
+  }
+
+  void listenRead()
+  {
+    _streamReadSubscription = Firestore.instance.collection("chats").document(_chatID).snapshots().listen((event) 
+    {
+      print("event");
+      if(event.data != null)
+      {
+        if(_messages.length > 0)
+        {
+          ChatModel model = _messages.removeLast();
+          model.setRead(event.data["$_peerID"]);
+          _messages.add(model);
+          _controller.sink.add(_messages);
+        }
+      }
+    });
+
   }
 
   /// create a unique chatID
@@ -110,15 +143,39 @@ class MessageService
   }
   
   /// deletes all messages except the last one from firebase
-  void deleteMessage()
+  Future<void> deleteMessage()
   {
-    Firestore.instance.collection("chats").document(_chatID).collection("messages").getDocuments().then((value)
+    return Firestore.instance.collection("chats").document(_chatID).collection("messages").getDocuments().then((value)
     {
-      for(int counter = 0; counter < value.documents.length; counter++)
+      for(int counter = 0; counter < value.documents.length-1; counter++)
       {
         value.documents[counter].reference.delete();
       }
     });
+  }
+
+  Future<void> deleteImage(String fileUrl) async
+  {
+    
+    FirebaseStorage.instance.getReferenceFromUrl(fileUrl).then((value) => value.delete());
+  }
+
+  void setRead()
+  {
+    Firestore.instance.collection("chats").document(_chatID).updateData(
+      {
+        '${Auth.getUserID()}' : true
+      }
+    );
+  }
+
+  void setUnread()
+  {
+    Firestore.instance.collection("chats").document(_chatID).updateData(
+      {
+        '$_peerID' : false
+      }
+    );
   }
 
   /// creates a new message model containing all required data
@@ -130,45 +187,41 @@ class MessageService
         'content' : content,
         'timestamp' : DateTime.now().millisecondsSinceEpoch,
         'type' : type,
-        'read' : false
-      }
-    );
-  }
-
-  ChatModel createModelRead()
-  {
-    return ChatModel.fromJson(
-      {
-        'from' : Auth.getUserID(),
-        'content' : "",
-        'type' : 3,
-        'read' : true,
-        'timestamp' : DateTime.now().millisecondsSinceEpoch
+        'read' : false,
       }
     );
   }
 
   /// called when message is sent 
   /// add message to firebase and to _controller and _messages
-  Future<void> sendMessage(String content, int type)
+  Future<void> sendMessage(String content, int type) async
   {
-    ChatModel model;
-    if(type == 3)
-    {
-      model = createModelRead();
-    }
-    else
-    {
-      model = _createModel(content, type);
-    }
+    ChatModel model = _createModel(content, type);
     var docRef = Firestore.
       instance.
       collection("chats").
       document(_chatID).
       collection("messages").
       document(model.timestamp().toString());
-    _messages.add( model);
-    _controller.sink.add(_messages);
+
+    var ref = await Firestore.instance.collection("chats").document(_chatID).get();
+    if(!ref.exists)
+    {   
+      Firestore.instance.collection("chats").document(_chatID).setData(
+        {
+          '$_peerID' : false,
+          '${Auth.getUserID()}' : false
+        }
+      );
+    }
+    
+    if(type == 0)
+    {
+      _messages.add(model);
+      _controller.sink.add(_messages);
+
+    } 
+    setUnread();
     return Firestore.instance.runTransaction((transaction) async 
     {
       await transaction.set(docRef, model.toJson());
@@ -195,16 +248,6 @@ class MessageService
     return Firestore.instance.collection("users").document(_peerID).snapshots();
   }
 
-  /// sets the status of the peer
-  void setWriting(bool isWriting)
-  {
-    Firestore.instance.collection("users").document(_peerID).updateData(
-      {
-        'writing' : isWriting ? _peerID : 'null'
-      }
-    );
-  }
-
   static Stream getOnlineStatus(String id)
   {
     return Firestore.
@@ -225,19 +268,24 @@ class MessageService
 
     if(_imageFile != null)
     {
+      ChatModel model = _createModel(_imageFile.path, 1);
+      print(model.content());
+      _messages.add(model);
+      _controller.sink.add(_messages);
       uploadFile(_imageFile);
     }
   }
 
   void uploadFile(File _imageFile) async
   {
+    
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
     StorageReference _ref = FirebaseStorage.instance.ref().child(fileName);
     StorageUploadTask uploadTask = _ref.putFile(_imageFile);
     StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
     storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl)
     {
-      sendMessage(downloadUrl, 1);
+      sendMessage(downloadUrl, 2);
     });
   }
 }

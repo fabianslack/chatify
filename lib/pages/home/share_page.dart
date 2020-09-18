@@ -9,7 +9,9 @@ class SharePage extends StatefulWidget
 {
   final String _id;
 
-  SharePage(this._id);
+  final MessageService _messageService;
+
+  SharePage(this._id, this._messageService);
 
   @override
   _SharePageState createState() => _SharePageState();
@@ -17,7 +19,6 @@ class SharePage extends StatefulWidget
 
 class _SharePageState extends State<SharePage> 
 {
-  MessageService _messageService;
   List<CameraDescription> _cameras;
 
 
@@ -26,7 +27,6 @@ class _SharePageState extends State<SharePage>
   {
     super.initState();
     loadCameras();
-    _messageService = MessageService(widget._id);
   }
 
   void loadCameras() async
@@ -73,7 +73,7 @@ class _SharePageState extends State<SharePage>
   {
     return Column(
       children: [
-        ShareImageWidget(_messageService.selectImage),
+        ShareImageWidget(widget._messageService.selectImage),
         SizedBox(height: 20,),
         ShareCameraWidget(navigateToCamera)
       ],

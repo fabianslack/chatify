@@ -90,7 +90,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
       stream: _service.getPeerStream(),
       builder: (context, snapshot)
       {
-        return snapshot.data["online"] ? Column(
+        return snapshot.hasData ?  snapshot.data["online"] ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -114,7 +114,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
             fontSize: 24,
             color: Colors.black
           ),
-        );
+        ) : Container();
       }
     );
   }
@@ -167,7 +167,18 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
         ),
         onPressed: () => Navigator.pop(context),
       ),
-     
+      actions: [
+        Icon(
+          Icons.phone,
+          size: 25,
+        ),
+        SizedBox(width: 10),
+        Icon(
+          Icons.video_call,
+          size: 25
+        ),
+        SizedBox(width: 10,)
+      ],
       bottom: PreferredSize(
         child: Container(
           color: Colors.grey[200],
@@ -206,7 +217,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
             {
               value.length > 0 ? _textContainsText = true : _textContainsText = false;
             });
-            _service.setWriting(_textContainsText ? true : false);
           },
         )
       ),
@@ -241,16 +251,19 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
         onTap: () 
         {
           showModalBottomSheet(
-            isScrollControlled: true,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30)
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30)
+              )
             ),
+            isScrollControlled: true,
             context: context,
             builder: (context)
             {
               return Container(
                 height: MediaQuery.of(context).size.height * 0.8,
-                child: SharePage(widget.id),
+                child: SharePage(widget.id, _service),
               );
             }
           );
@@ -343,72 +356,55 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
         builder: (context, snapshot)
         {
           return snapshot.data != null ? ListView(
-          reverse: true,
-          controller: _scrollController,   
-          physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),      
-          children: [
-            CustomScrollView(
-              physics: NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              slivers:[
-                SliverList(
-                  delegate: SliverChildListDelegate(
-                    List.generate(snapshot.data.length, (index)
-                    {
-                      ChatModel model = snapshot.data[index];
-                      bool showIsOwn = false;
-                      if(index != snapshot.data.length-1)
+            reverse: true,
+            controller: _scrollController,   
+            physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),      
+            children: [
+              CustomScrollView(
+                physics: NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                slivers:[
+                  SliverList(
+                    delegate: SliverChildListDelegate(
+                      List.generate(snapshot.data.length, (index)
                       {
-                        if(snapshot.data[index+1].from() != snapshot.data[index].from())
+                        ChatModel model = snapshot.data[index];
+                        bool showRead = index == snapshot.data.length-1;;
+
+                        bool showIsOwn = false;
+                        if(index != snapshot.data.length-1)
+                        {
+                          if(snapshot.data[index+1].from() != snapshot.data[index].from())
+                          {
+                            showIsOwn = true;
+                          }
+                        }
+                        if(index == snapshot.data.length -1)
                         {
                           showIsOwn = true;
                         }
-                      }
-                      if(index == snapshot.data.length -1)
-                      {
-                        showIsOwn = true;
-                      }
-                      if(model.type() == 0)
-                      {
-                        return ChatMessage(model, showIsOwn);
-                      }
-                      else if(model.type() == 1)
-                      {
-                        return ChatImage(model);
-                      }
-                      return Container();
-                      }
+                        if(model.type() == 0)
+                        {
+                          return ChatMessage(model, showIsOwn, showRead);
+                        }
+                        else if(model.type() == 1 || model.type() == 2)
+                        {
+                          return ChatImage(model, model.type() == 1 ? true : false, showRead);
+                        }
+                        return Container();
+                        }
+                      ),
                     ),
-                  ),
-                )
-                
-              ]
-            )
-          ],
-            )  : Container();
-        
+                  )
+                ]
+              )
+            ],
+          )  : Container();
         }
       )
     );
   }
 
-  Widget getWritingWidget()
-  {
-    return StreamBuilder(
-      stream: _service.getPeerStream(),
-      builder: (context, snapshot)
-      {
-        if(snapshot.hasData)
-        {
-          if(snapshot.data["writing"] == Auth.getUserID())
-          {
-            return Text("Writing...");
-          }
-        }
-        return Container();
-      }
-    );
-  }
 
 
   Widget getBody()
@@ -416,7 +412,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin
     return Column(
       children: <Widget>[
       getChatColumn(),
-      getWritingWidget(),
       getBottomBody(),
       ],
     );

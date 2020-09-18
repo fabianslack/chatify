@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:chatapp/models/chat_model.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:flutter/material.dart';
@@ -8,72 +10,74 @@ import 'full_photo.dart';
 class ChatImage extends StatelessWidget
 {
   bool _left;
+  bool _downloaded;
+  bool _showRead;
 
   final ChatModel _ref;
 
-  ChatImage(this._ref)
+  ChatImage(this._ref, this._downloaded, this._showRead)
   {
     _left = _ref.from() == Auth.getUserID();
   }
 
+    
+  String buildTimeStamp()
+  {
+    DateTime time = DateTime.fromMillisecondsSinceEpoch(_ref.timestamp());
+    String minute = time.minute.toString();
+    String hour = time.hour.toString();
+    return hour + ":" +  (minute.length > 1 ? minute : "0" + minute);
+  } 
+
   @override
   Widget build(BuildContext context) 
   {
-    DateTime time = DateTime.fromMillisecondsSinceEpoch(_ref.timestamp());
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      child: Row(
-        mainAxisAlignment: !_left ? MainAxisAlignment.start : MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+      child: Column(
+        crossAxisAlignment: !_left ? CrossAxisAlignment.start : CrossAxisAlignment.end,
         children: [
-          !_left ? Text(
-            time.hour.toString() + ":" + time.hour.toString(),
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12
-            ),
-          ) :Container(),
           FlatButton(
             child: Container(
-              width: 200.0,
-              height: 200.0,
-              
-              padding: EdgeInsets.all(70.0),
+              height: 200,
+              width: 200,
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: Colors.grey[200],
+                  width: 1
+                )
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                  child: _downloaded ?  Image.file(
+                  new File(_ref.content()),
+                  fit: BoxFit.cover,
 
-                borderRadius: BorderRadius.all(
-                  Radius.circular(8.0),
-                ),
-              ),
-              child: Image.network(
-                 _ref.content(),
-                 fit: BoxFit.cover,
-                 errorBuilder: (context, error, stackTrace) 
-                 {
-                    return Material(
-                      child: Image.asset(
-                        'images/img_not_available.jpeg',
-                        width: 200.0,
-                        height: 200.0,
-                        fit: BoxFit.cover,
-                      )  
-                    );
-                 },
-              ),
+                ) : Image(
+                  fit: BoxFit.cover,
+                  image: NetworkImage(
+                  _ref.content(),
+                ))
+
+              )
             ),
             onPressed: () {
               Navigator.push(
                   context, MaterialPageRoute(builder: (context) => FullPhoto(url: _ref.content())));
             },
           ),
-          _left ? Text(
-          time.hour.toString() + ":" + time.hour.toString(),
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 2),
+            child: Text(
+              _showRead ? "Seen  " + buildTimeStamp() : buildTimeStamp(),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.black,
+                fontWeight: FontWeight.w600
+              )
             ),
-          ) : Container()
+          )
         ],
       ),
     );
