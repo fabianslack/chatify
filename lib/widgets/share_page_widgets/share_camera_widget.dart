@@ -7,9 +7,14 @@ class ShareCameraWidget extends ShareWidget
 
   ShareCameraWidget(Function callback) : super(callback);
 
+  Widget buildBody()
+  {
+
+  }
+
   @override
   Widget build(BuildContext context) 
   {
-    return getBody("Take a photo or video", context, Colors.purple[400], Colors.lightBlue, CupertinoIcons.photo_camera_solid);
+    return getBody(context, buildBody(), true);
   }
 }

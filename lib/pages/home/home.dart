@@ -1,7 +1,6 @@
 import 'package:chatapp/pages/profile/profile_page.dart';
 import 'package:chatapp/services/authentication.dart';
 import 'package:chatapp/services/friends_service.dart';
-import 'package:chatapp/services/message_service.dart';
 import 'package:chatapp/widgets/story_wigets/add_story_widget.dart';
 import 'package:chatapp/widgets/chat_widgets/chat_preview.dart';
 import 'package:chatapp/widgets/story_wigets/status_bar_item.dart';
@@ -17,7 +16,6 @@ class Home extends StatefulWidget
 
 class _HomeState extends State<Home> with TickerProviderStateMixin
 {
-  Auth _auth;
   final GlobalKey _searchHeightKey = GlobalKey();
 
   bool _searchPressed = false;
@@ -37,13 +35,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   int _animationDuration = 250;
 
+  List<dynamic> _friends;
+
+
   @override
   void initState()
   {
     super.initState();
     _friendsService = FriendsService();
-    _auth = Auth();
-    loadStories();
+    _friendsService.loadFriends().then((value) 
+    {
+      setState(() {
+        _friends = value;
+      });
+    });
     getProfileImage();
     _scrollController.addListener(onScrollUpdate);
 
@@ -95,23 +100,21 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
 
 
-  String getChatRoomId(String id)
-  {
-    if(id.hashCode >= Auth.getUserID().hashCode)
-    {
-      return '' + (id.hashCode - Auth.getUserID().hashCode).toString();
-    }
-    else
-    {
-      return '' + (Auth.getUserID().hashCode - id.hashCode).toString();
-
-    }
-  }
 
   void loadStories()
   {
     setState(() {
       _stories = _friendsService.getStories();
+    });
+  }
+
+  void onNewMessage(String id)
+  {
+    List<dynamic> copy = List.from(_friends);
+    copy.remove(id);
+    copy.insert(0, id);
+    setState(() {
+      _friends = copy;
     });
   }
 
@@ -265,34 +268,14 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget getChats()
   {
-    return StreamBuilder(
-      stream: _friendsService.getStream(),
-      builder: (context, snapshot) => snapshot.data != null ? ListView.builder(
-        shrinkWrap: true,
-        physics: BouncingScrollPhysics(),
-        itemCount: snapshot.data["friends"].length,
-        itemBuilder: (context, index) => StreamBuilder(
-          stream: MessageService.getHomeStream(getChatRoomId(snapshot.data["friendsId"][index])),
-          builder: (context, chatsnapshot)
-          {
-            if(chatsnapshot.hasData && chatsnapshot.data.documents.length > 0)
-            {
-              return ChatPreview(
-                snapshot.data["friends"][index], 
-                chatsnapshot.data.documents[0],
-                true,
-                snapshot.data["friendsId"][index],
-              );
-            } 
-            return ChatPreview(
-              snapshot.data["friends"][index],
-              null, 
-              false, 
-              snapshot.data["friendsId"][index]
-            );
-          } 
-        ),
-      ) : Container(),
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: _friends.length,
+      itemBuilder: (context, index) => ChatPreview(
+        _friends[index],
+        onNewMessage
+      )
     );
   }
 

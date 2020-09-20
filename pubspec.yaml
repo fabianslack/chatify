@@ -71,6 +71,7 @@ flutter:
     - assets/apps_location.png
     - assets/on_point.png
     - assets/key.png
+    - assets/background_share_widget.jpg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

@@ -71,12 +71,21 @@ class _SharePageState extends State<SharePage>
 
   Widget getWidgetList()
   {
-    return Column(
-      children: [
-        ShareImageWidget(widget._messageService.selectImage),
-        SizedBox(height: 20,),
-        ShareCameraWidget(navigateToCamera)
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+        children: [
+          ShareImageWidget(widget._messageService.selectImage),
+          SizedBox(height: 20,),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ShareCameraWidget(navigateToCamera),
+              ShareCameraWidget(navigateToCamera),
+            ],
+          )
+        ],
+      ),
     );
   }
 

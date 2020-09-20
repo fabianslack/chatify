@@ -228,9 +228,24 @@ class MessageService
     });
   }
 
-  /// return the stream for the home page
-  static Stream getHomeStream(String roomID)
+  
+  static String getChatRoomId(String id)
   {
+    if(id.hashCode >= Auth.getUserID().hashCode)
+    {
+      return '' + (id.hashCode - Auth.getUserID().hashCode).toString();
+    }
+    else
+    {
+      return '' + (Auth.getUserID().hashCode - id.hashCode).toString();
+
+    }
+  }
+
+  /// return the stream for the home page
+  static Stream getHomeStream(String id)
+  {
+    String roomID = getChatRoomId(id);
     return Firestore.
     instance.
     collection("chats").

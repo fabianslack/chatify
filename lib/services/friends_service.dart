@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'authentication.dart';
 
 class FriendsService
 {
+
+  List<dynamic> _friends = List();
 
   void addFriend(String friendID) async
   {
@@ -26,20 +29,23 @@ class FriendsService
 
   Future<List<dynamic>> getStories() async
   {
-    var _friends = await getFriends();
-    if(_friends != null)
+    var result = List();
+    for(var element in _friends)
     {
-      var result = List();
-      for(var element in _friends)
+      if(await hasStory(element))
       {
-        if(await hasStory(element))
-        {
-          result.add(element);
-        }
+        result.add(element);
       }
-      return result;
     }
-    return null;
+    return result;
+  }
+
+  Future<List<dynamic>> loadFriends()
+  {
+    return Firestore.instance.collection("users").document(Auth.getUserID()).get().then((value) 
+    {
+      return value["friendsId"];
+    });
   }
 
   Future<bool> hasStory(String id) async
@@ -58,6 +64,7 @@ class FriendsService
       "requests" : FieldValue.arrayUnion([Auth.getUserID()])
     });
   }
+
 
   void removeRequest(String friendID)
   {
@@ -100,8 +107,8 @@ class FriendsService
     return Firestore.instance.collection("users").document(friendID).get().then((value) => value["online"]);
   }
 
-  Future<List<dynamic>> getFriends()
+  List<dynamic> getFriends()
   {
-    return Firestore.instance.collection("users").document(Auth.getUserID()).get().then((value) => value["friendsId"]);
+    return _friends;
   }
 }
