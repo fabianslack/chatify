@@ -35,23 +35,21 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   int _animationDuration = 250;
 
-  List<dynamic> _friends;
-
-
   @override
   void initState()
   {
     super.initState();
     _friendsService = FriendsService();
-    _friendsService.loadFriends().then((value) 
-    {
-      setState(() {
-        _friends = value;
-      });
-    });
     getProfileImage();
     _scrollController.addListener(onScrollUpdate);
 
+  }
+
+  @override
+  void dispose()
+  {
+    super.dispose();
+    _friendsService.onClose();
   }
 
   void onScrollUpdate()
@@ -98,23 +96,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
     });
   }
 
-
-
-
   void loadStories()
   {
     setState(() {
       _stories = _friendsService.getStories();
-    });
-  }
-
-  void onNewMessage(String id)
-  {
-    List<dynamic> copy = List.from(_friends);
-    copy.remove(id);
-    copy.insert(0, id);
-    setState(() {
-      _friends = copy;
     });
   }
 
@@ -268,14 +253,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin
 
   Widget getChats()
   {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: _friends.length,
-      itemBuilder: (context, index) => ChatPreview(
-        _friends[index],
-        onNewMessage
-      )
+    return StreamBuilder(
+      stream: _friendsService.stream,
+      builder: (context, snapshot)
+      {
+        print(snapshot.data.documents[0]["id"]);
+        return snapshot.data != null  ? ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: snapshot.data.documents.length,
+          itemBuilder: (context, index) => ChatPreview(
+            snapshot.data.documents[index]["id"]
+          )
+        ) : Container();
+      }
     );
   }
 

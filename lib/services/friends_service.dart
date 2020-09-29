@@ -5,6 +5,29 @@ import 'authentication.dart';
 
 class FriendsService
 {
+  StreamController _controller = StreamController();
+  StreamSubscription _streamSubscription;
+
+  FriendsService()
+  {
+    listen();
+  }
+
+  void listen()
+  {
+    _streamSubscription = Firestore.instance.collection("users").document(Auth.getUserID()).collection("friends").orderBy("timestamp", descending: true).snapshots().listen((event) 
+    { 
+      _controller.sink.add(event);
+    });
+  }
+
+  void onClose()
+  {
+    _streamSubscription.cancel();
+    _controller.close();
+  }
+
+  Stream get stream => _controller.stream;
 
   List<dynamic> _friends = List();
 
@@ -14,17 +37,7 @@ class FriendsService
       value.data["username"]);
     String username = await Firestore.instance.collection("users").document(Auth.getUserID()).get().then((value) => 
       value.data["username"]);
-    Firestore.instance.collection("users").document(Auth.getUserID()).updateData(
-      {
-        "friends": FieldValue.arrayUnion([name]), 
-        "friendsId" : FieldValue.arrayUnion([friendID])
-      });
-
-    Firestore.instance.collection("users").document(friendID).updateData(
-    {
-      "friends": FieldValue.arrayUnion([username]),
-      "friendsId" : FieldValue.arrayUnion([Auth.getUserID()])
-    });
+    
   }
 
   Future<List<dynamic>> getStories() async
@@ -40,12 +53,9 @@ class FriendsService
     return result;
   }
 
-  Future<List<dynamic>> loadFriends()
+  Stream getStream()
   {
-    return Firestore.instance.collection("users").document(Auth.getUserID()).get().then((value) 
-    {
-      return value["friendsId"];
-    });
+    return Firestore.instance.collection("users").document(Auth.getUserID()).collection("friends").orderBy("timestamp", descending: true).snapshots();
   }
 
   Future<bool> hasStory(String id) async
@@ -78,15 +88,6 @@ class FriendsService
     });
   }
 
-  Stream getStream()
-  {
-    return Firestore.
-    instance.
-    collection("users").
-    document(Auth.getUserID()).
-    snapshots();
-  }
-
   static Future<String> loadImage(String friendId)
   {
     return Firestore.instance.collection("users").document(friendId).get().then((value) => value["profileUrl"]);
@@ -105,10 +106,5 @@ class FriendsService
   Future<bool> isFriendOnline(String friendID) async
   {
     return Firestore.instance.collection("users").document(friendID).get().then((value) => value["online"]);
-  }
-
-  List<dynamic> getFriends()
-  {
-    return _friends;
   }
 }

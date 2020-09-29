@@ -214,12 +214,22 @@ class MessageService
         }
       );
     }
-    
+    Firestore.instance.collection("users").document(_peerID).collection("friends").document(Auth.getUserID()).setData(
+      {
+        'id' : Auth.getUserID(),
+        'timestamp': model.timestamp()
+      }
+    );
+    Firestore.instance.collection("users").document(Auth.getUserID()).collection("friends").document(_peerID).setData(
+      {
+        'id' : _peerID,
+        'timestamp': model.timestamp()
+      }
+    );
     if(type == 0)
     {
       _messages.add(model);
       _controller.sink.add(_messages);
-
     } 
     setUnread();
     return Firestore.instance.runTransaction((transaction) async 

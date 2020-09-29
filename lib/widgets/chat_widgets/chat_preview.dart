@@ -10,9 +10,8 @@ import 'package:flutter/material.dart';
 class ChatPreview extends StatefulWidget 
 {
   final String _id;
-  final Function _callback;
 
-  ChatPreview(this._id, this._callback);
+  ChatPreview(this._id);
 
   @override
   _ChatPreviewState createState() => _ChatPreviewState();
@@ -23,15 +22,12 @@ class _ChatPreviewState extends State<ChatPreview>
   String _imageRef;
   bool _read;
   String _username;
-  int _timestamp;
 
   @override
   void initState() 
   {
     super.initState();
-    loadProfileImage();
-    loadUsername();
-    _timestamp = 0;
+   
   }
 
   void loadProfileImage() 
@@ -77,11 +73,6 @@ class _ChatPreviewState extends State<ChatPreview>
         );
       }
     );
-  }
-
-  int getTime()
-  {
-    return _timestamp;
   }
 
   Widget getImage()
@@ -149,10 +140,7 @@ class _ChatPreviewState extends State<ChatPreview>
   //  _read = widget._message ? widget._ref["received"] && widget._ref["from"] != Auth.getUserID() : false;
     _read = true;
 
-    // DateTime time = widget._model.content() != null 
-    // ? DateTime.fromMillisecondsSinceEpoch(widget._model.timestamp())
-    // : DateTime(0);
-    // String _time = time.hour.toString() + ":" + (time.minute.toString().length > 1 ? time.minute.toString() : "0" + time.minute.toString());
+    
     return Row(
       children: <Widget>[
         getImage(),
@@ -160,43 +148,50 @@ class _ChatPreviewState extends State<ChatPreview>
           width: 10,
         ),
         Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(_username != null ? _username : "",
-                    overflow: TextOverflow.clip,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 18,
-                      color: Colors.black
-                    )
-                  ),
-                  // Text(
-                  //   _time,
-                  //   style: TextStyle(
-                  //     color: Colors.grey,
-                  //     fontWeight: FontWeight.w500,
-                  //     fontSize: 14
-                  //   )
-                  // ),
-                ],
-              ),
-              SizedBox(height: 5,),
-              StreamBuilder(
-                stream: MessageService.getHomeStream(widget._id),
-                builder: (context, snapshot) {
-                  if(  snapshot.data !=  null && snapshot.data.documents.length > 0 )
-                  {
-                    _timestamp = snapshot.data.documents[0]["timestamp"];
-                    return Row(
+          child: StreamBuilder(
+            stream: MessageService.getHomeStream(widget._id),
+            builder: (context, snapshot)
+            {
+              if(snapshot.data != null)
+              {
+                var ref = snapshot.data.documents[0];
+                DateTime time = snapshot.data != null 
+                ? DateTime.fromMillisecondsSinceEpoch(ref["timestamp"])
+                : DateTime(0);
+                String _time = time.hour.toString() + ":" + (time.minute.toString().length > 1 ? time.minute.toString() : "0" + time.minute.toString());
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_username != null ? _username : "",
+                          overflow: TextOverflow.clip,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                            color: Colors.black
+                          )
+                        ),
+                        Text(
+                          _time,
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14
+                          )
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 5,),
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          snapshot.data.documents[0]["content"] != null ? snapshot.data.documents[0]["type"] == 0 ? snapshot.data.documents[0]["content"] + snapshot.data.documents[0]["timestamp"].toString() : "Image" : "",
+                          ref["content"] != null ? ref["type"] == 0 ? ref["content"] : "Image" : "",
                           overflow: TextOverflow.ellipsis,
                           style:  TextStyle(
                             fontSize: 16, 
@@ -206,13 +201,13 @@ class _ChatPreviewState extends State<ChatPreview>
                         ),
                         _read && snapshot.data.documents[0]["content"] != null ? getNewMessageAlert() : Container()
                       ] ,
-                    );
-                  }
-                  return Container();
-                }
-              )
-            ],
-          ),
+                    )
+                  ],
+                );
+              }
+              return Container();
+            }
+          )
         ),
       ],
     );
@@ -221,7 +216,8 @@ class _ChatPreviewState extends State<ChatPreview>
   @override
   Widget build(BuildContext context) 
   {
-
+    loadProfileImage();
+    loadUsername();
     return Padding(
       padding: const EdgeInsets.only(right:10.0),
       child: GestureDetector(

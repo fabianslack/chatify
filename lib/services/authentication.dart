@@ -88,14 +88,13 @@ class Auth
           'id' : user.uid,
           'username': username,
           'e-mail': email,
-          'friends' : [],
-          'friendsId' : [],
           'stories': [],
           'requests' : [],
           'online' : false,
           'profileUrl' : "",
           'typing' : 'null'
         });
+        Firestore.instance.collection("users").document(user.uid).collection("friends");
         userID = user.uid;
       }
     }
