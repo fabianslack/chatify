@@ -1,7 +1,7 @@
-# chatapp
+# Chatify
 
-A basic Chatapp built with the Flutter Framework
+A basic chatting app built with the Dart and the Flutter Framework
 
-## Getting Started
+Backend is provided by a Firebase database containing the chat contents and uploaded images.
 
-Backend is a Firebase Database containing the chat contents
+
